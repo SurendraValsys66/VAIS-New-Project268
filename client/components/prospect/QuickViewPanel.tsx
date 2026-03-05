@@ -203,58 +203,75 @@ export const QuickViewPanel: React.FC<QuickViewPanelProps> = ({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {/* Main Contact Details Card */}
-        <Card title="Main Contact Details" icon={<Mail className="w-4 h-4" />}>
-          <div className="space-y-2">
-            <ContactItem
-              value={maskEmail(prospect.email)}
-              label="B"
-              isLink={true}
-              href={`mailto:${prospect.email}`}
-            />
+        {/* Contact Information Card - Combined */}
+        <Card title="Contact Information" icon={<Mail className="w-4 h-4" />}>
+          <div className="space-y-4">
+            {/* Main Contact Details Section */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-900 uppercase mb-2 pb-2 border-b border-gray-200">
+                Main Contact Details
+              </h4>
+              <div className="space-y-2">
+                <ContactItem
+                  value={maskEmail(prospect.email)}
+                  label="B"
+                  isLink={true}
+                  href={`mailto:${prospect.email}`}
+                />
+                {prospect.phone && (
+                  <ContactItem
+                    value={prospect.phone}
+                    label="M"
+                  />
+                )}
+                {prospect.linkedinUrl && (
+                  <ContactItem
+                    value="LinkedIn Profile"
+                    isLink={true}
+                    href={prospect.linkedinUrl}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Additional Contact Details Section */}
             {prospect.phone && (
-              <ContactItem
-                value={prospect.phone}
-                label="M"
-              />
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900 uppercase mb-2 pb-2 border-b border-gray-200">
+                  Additional Contact Details
+                </h4>
+                <div className="space-y-2">
+                  <ContactItem
+                    value={prospect.phone}
+                    label="HQ"
+                  />
+                </div>
+              </div>
             )}
-            {prospect.linkedinUrl && (
-              <ContactItem
-                value="LinkedIn Profile"
-                isLink={true}
-                href={prospect.linkedinUrl}
-              />
+
+            {/* Location Section */}
+            {prospect.city && prospect.country && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900 uppercase mb-2 pb-2 border-b border-gray-200">
+                  Location
+                </h4>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-900">
+                    Local: {prospect.city}, {prospect.country}
+                  </p>
+                </div>
+              </div>
             )}
-          </div>
-        </Card>
 
-        {/* Additional Contact Details Card */}
-        {prospect.phone && (
-          <Card title="Additional Contact Details">
-            <div className="space-y-2">
-              <ContactItem
-                value={prospect.phone}
-                label="HQ"
-              />
+            {/* CRM Section */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-900 uppercase mb-2 pb-2 border-b border-gray-200">
+                CRM
+              </h4>
+              <div className="text-sm text-gray-600">
+                No CRM contact or account owner
+              </div>
             </div>
-          </Card>
-        )}
-
-        {/* Location Card */}
-        {prospect.city && prospect.country && (
-          <Card title="Location" icon={<MapPin className="w-4 h-4" />}>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-900">
-                Local: {prospect.city}, {prospect.country}
-              </p>
-            </div>
-          </Card>
-        )}
-
-        {/* CRM Card */}
-        <Card title="CRM">
-          <div className="text-sm text-gray-600">
-            No CRM contact or account owner
           </div>
         </Card>
 
