@@ -2,10 +2,20 @@ export type ComponentType =
   | "section"
   | "row"
   | "column"
-  | "text"
-  | "image"
-  | "button"
   | "heading"
+  | "paragraph"
+  | "button"
+  | "image"
+  | "video"
+  | "divider"
+  | "hero"
+  | "feature-grid"
+  | "pricing"
+  | "testimonials"
+  | "logo-cloud"
+  | "faq"
+  | "cta"
+  | "contact-form"
   | "card";
 
 export interface BuilderComponent {

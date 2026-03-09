@@ -9,6 +9,17 @@ import { Sidebar } from "./Sidebar";
 export const BuilderCanvas: React.FC = () => {
   const { layout, addComponent, moveComponent, updateComponent, removeComponent } = useLayout([
     {
+      id: "root-hero-1",
+      type: "hero",
+      props: {},
+      height: 600,
+    },
+    {
+      id: "root-logo-cloud-1",
+      type: "logo-cloud",
+      props: {},
+    },
+    {
       id: "root-section-1",
       type: "section",
       props: {},
@@ -23,7 +34,7 @@ export const BuilderCanvas: React.FC = () => {
               type: "column",
               width: 12,
               children: [
-                { id: "root-heading-1", type: "heading", props: { content: "Builder Title" } },
+                { id: "root-feature-grid-1", type: "feature-grid", props: {} },
               ],
             },
           ],

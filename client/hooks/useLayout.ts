@@ -12,7 +12,7 @@ export const useLayout = (initialData: BuilderComponent[] = []) => {
         props: {},
         children: type === "section" || type === "row" || type === "column" ? [] : undefined,
         width: type === "column" ? 6 : undefined,
-        height: ["section", "image", "card"].includes(type) ? 200 : undefined,
+        height: ["section", "image", "card", "hero", "feature-grid", "pricing", "testimonials", "faq", "video"].includes(type) ? 200 : undefined,
       };
 
       const addToChildren = (

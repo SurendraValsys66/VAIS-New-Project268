@@ -2,7 +2,17 @@ import React from "react";
 import { useDrop, useDrag } from "react-dnd";
 import { BuilderComponent, DRAG_TYPES, ComponentType } from "@/types/builder";
 import { cn } from "@/lib/utils";
-import { Trash2, Move, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Trash2,
+  Move,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Check,
+  Star,
+  Quote,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface RendererProps {
@@ -31,7 +41,6 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: DRAG_TYPES.COMPONENT,
     canDrop: (item: any) => {
-      // Avoid nesting self
       if (item.id === component.id) return false;
 
       switch (component.type) {
@@ -47,12 +56,9 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
     },
     drop: (item: any, monitor) => {
       if (monitor.didDrop()) return;
-
       if (item.id) {
-        // Reordering
         onMove(item.id, component.id, component.children?.length || 0);
       } else {
-        // Adding new
         onAdd(item.type, component.id, component.children?.length || 0);
       }
     },
@@ -74,7 +80,7 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
           component.type === "column" && "p-2 h-full flex flex-col gap-2",
         )}
       >
-        {component.children?.map((child, index) => (
+        {component.children?.map((child) => (
           <ComponentRenderer
             key={child.id}
             component={child}
@@ -85,7 +91,7 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
           />
         ))}
         {component.children?.length === 0 && (
-          <div className="flex items-center justify-center h-full min-h-[50px] text-gray-400 text-xs italic">
+          <div className="flex items-center justify-center h-full min-h-[50px] text-gray-400 text-[10px] italic">
             Drop items here
           </div>
         )}
@@ -94,7 +100,17 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
   };
 
   const wrapWithControls = (content: React.ReactNode) => {
-    const isResizable = ["section", "image", "card", "heading", "text"].includes(component.type);
+    const isResizable = [
+      "section",
+      "image",
+      "video",
+      "hero",
+      "feature-grid",
+      "pricing",
+      "testimonials",
+      "faq",
+      "card",
+    ].includes(component.type);
 
     return (
       <div
@@ -112,7 +128,7 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
           ...(component.height ? { minHeight: `${component.height}px` } : {}),
         }}
       >
-        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 flex items-center bg-blue-500 rounded-bl-md text-white px-1 z-20 transition-opacity">
+        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 flex items-center bg-blue-500 rounded-bl-md text-white px-1 z-30 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
@@ -127,7 +143,7 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
         </div>
 
         {component.type === "column" && (
-          <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 flex items-center justify-between bg-blue-500/10 px-2 py-1 z-10 text-xs font-bold text-blue-600 pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 flex items-center justify-between bg-blue-500/10 px-2 py-1 z-20 text-[10px] font-bold text-blue-600 pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto">
               <Button
                 variant="ghost"
@@ -158,11 +174,11 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
 
         {isResizable && (
           <div
-            className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-blue-400/50 hover:bg-blue-500 transition-all z-10"
+            className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-blue-400/50 hover:bg-blue-500 transition-all z-20"
             onMouseDown={(e) => {
               e.preventDefault();
               const startY = e.clientY;
-              const startHeight = component.height || 100;
+              const startHeight = component.height || (component.type === "section" ? 200 : 100);
 
               const onMouseMove = (moveEvent: MouseEvent) => {
                 const newHeight = Math.max(50, startHeight + (moveEvent.clientY - startY));
@@ -186,62 +202,343 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
   };
 
   switch (component.type) {
+    // --- Layout ---
     case "section":
       return wrapWithControls(
-        <section className="bg-white rounded-lg shadow-sm">
-          <div className="px-2 py-1 text-[10px] uppercase font-bold text-gray-400">Section</div>
+        <section className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-2 py-1 text-[8px] uppercase font-bold text-gray-300">Section</div>
           {renderChildren()}
-        </section>
+        </section>,
       );
     case "row":
       return wrapWithControls(
-        <div className="bg-gray-50/50 rounded p-2">
-          <div className="px-1 py-0.5 text-[10px] uppercase font-bold text-gray-400">Row</div>
+        <div className="bg-gray-50/50 rounded p-1">
+          <div className="px-1 py-0.5 text-[8px] uppercase font-bold text-gray-300">Row</div>
           {renderChildren()}
-        </div>
+        </div>,
       );
     case "column":
       return wrapWithControls(
-        <div className="bg-blue-50/20 rounded border border-blue-100/30 min-h-[60px]">
-          <div className="px-1 py-0.5 text-[10px] uppercase font-bold text-blue-400">Column</div>
+        <div className="bg-blue-50/10 rounded border border-blue-100/20 min-h-[60px]">
+          <div className="px-1 py-0.5 text-[8px] uppercase font-bold text-blue-200">Column</div>
           {renderChildren()}
-        </div>
+        </div>,
       );
+
+    // --- Basic Components ---
     case "heading":
       return wrapWithControls(
         <div className="p-4 h-full flex items-center">
-           <h2 className="text-2xl font-bold w-full" contentEditable suppressContentEditableWarning>New Heading</h2>
-        </div>
+          <h2
+            className="text-3xl font-bold w-full leading-tight text-gray-900"
+            contentEditable
+            suppressContentEditableWarning
+          >
+            Catchy Heading
+          </h2>
+        </div>,
       );
-    case "text":
+    case "paragraph":
       return wrapWithControls(
         <div className="p-4 h-full">
-           <p className="text-gray-600" contentEditable suppressContentEditableWarning>Sample text content. Edit this directly in the canvas.</p>
-        </div>
+          <p
+            className="text-base text-gray-600 leading-relaxed"
+            contentEditable
+            suppressContentEditableWarning
+          >
+            Add your description text here. Make it compelling and easy to read for your visitors.
+          </p>
+        </div>,
+      );
+    case "button":
+      return wrapWithControls(
+        <div className="p-4 h-full flex items-center justify-start">
+          <Button className="px-8 py-6 text-lg font-semibold rounded-xl shadow-lg bg-blue-600 hover:bg-blue-700">
+            Get Started
+          </Button>
+        </div>,
       );
     case "image":
       return wrapWithControls(
         <div className="p-4 h-full">
-           <div className="h-full bg-gray-200 flex items-center justify-center rounded-lg text-gray-400">
-             Image Placeholder
-           </div>
-        </div>
+          <div className="h-full bg-gray-100 flex items-center justify-center rounded-2xl text-gray-400 border-2 border-dashed border-gray-200 min-h-[150px]">
+            Image Placeholder
+          </div>
+        </div>,
       );
-    case "button":
+    case "video":
       return wrapWithControls(
-        <div className="p-4 h-full flex items-center justify-center">
-           <Button>Click Me</Button>
-        </div>
+        <div className="p-4 h-full">
+          <div className="h-full aspect-video bg-black/90 flex items-center justify-center rounded-2xl shadow-xl overflow-hidden relative group/video">
+            <Play className="w-16 h-16 text-white opacity-50 group-hover/video:opacity-100 transition-opacity" />
+            <div className="absolute bottom-4 left-4 right-4 h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="w-1/3 h-full bg-blue-500" />
+            </div>
+          </div>
+        </div>,
       );
+    case "divider":
+      return wrapWithControls(
+        <div className="px-4 py-8 h-full flex items-center">
+          <hr className="w-full border-t border-gray-200" />
+        </div>,
+      );
+
+    // --- Marketing Components ---
+    case "hero":
+      return wrapWithControls(
+        <div className="relative overflow-hidden bg-white p-12 lg:p-24 flex flex-col items-center text-center gap-6 rounded-3xl border border-gray-100">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider"
+            contentEditable
+            suppressContentEditableWarning
+          >
+            ✨ New Release
+          </div>
+          <h1
+            className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tight leading-none max-w-4xl"
+            contentEditable
+            suppressContentEditableWarning
+          >
+            Build your vision <span className="text-blue-600">faster</span> than ever.
+          </h1>
+          <p
+            className="text-xl text-gray-600 max-w-2xl leading-relaxed"
+            contentEditable
+            suppressContentEditableWarning
+          >
+            The world's most advanced landing page builder. Drag, drop, and launch in minutes, not
+            days.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
+            <Button className="px-10 py-7 text-xl font-bold rounded-2xl bg-blue-600 shadow-xl hover:shadow-2xl transition-all">
+              Start Free Trial
+            </Button>
+            <Button
+              variant="outline"
+              className="px-10 py-7 text-xl font-bold rounded-2xl border-gray-200"
+            >
+              Watch Demo
+            </Button>
+          </div>
+        </div>,
+      );
+
+    case "feature-grid":
+      return wrapWithControls(
+        <div className="p-12 bg-gray-50/50 rounded-3xl border border-gray-100">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-3xl font-bold text-gray-900" contentEditable>
+              Everything you need to scale
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto" contentEditable>
+              Powerful tools designed to help you grow your business and reach your goals faster.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+                  0{i}
+                </div>
+                <h3 className="text-xl font-bold" contentEditable>
+                  Feature Item {i}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed" contentEditable>
+                  Explain how this feature solves a real problem for your users.
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>,
+      );
+
+    case "pricing":
+      return wrapWithControls(
+        <div className="p-12 bg-white rounded-3xl border border-gray-100">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black mb-4">Simple, transparent pricing</h2>
+            <p className="text-gray-500">Choose the plan that's right for you.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {["Starter", "Pro", "Enterprise"].map((plan, i) => (
+              <div
+                key={plan}
+                className={cn(
+                  "p-8 rounded-3xl border-2 transition-all space-y-6 flex flex-col",
+                  i === 1 ? "border-blue-500 shadow-2xl scale-105 relative z-10" : "border-gray-100",
+                )}
+              >
+                {i === 1 && (
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-500 text-white text-[10px] font-black rounded-full uppercase">
+                    Most Popular
+                  </span>
+                )}
+                <div>
+                  <h3 className="text-xl font-bold mb-1">{plan}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black">${[19, 49, 99][i]}</span>
+                    <span className="text-gray-400 text-sm">/mo</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {[1, 2, 3, 4].map((j) => (
+                    <li key={j} className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-4 h-4 text-green-500" /> Benefit number {j}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className={cn(
+                    "w-full py-6 font-bold rounded-xl",
+                    i === 1 ? "bg-blue-600" : "bg-gray-900",
+                  )}
+                >
+                  Choose {plan}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>,
+      );
+
+    case "testimonials":
+      return wrapWithControls(
+        <div className="p-12 bg-blue-600 rounded-3xl text-white relative overflow-hidden">
+          <Quote className="absolute top-8 left-8 w-24 h-24 opacity-10" />
+          <div className="relative z-10 flex flex-col items-center text-center gap-8">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+              ))}
+            </div>
+            <p className="text-2xl font-bold max-w-3xl leading-snug italic" contentEditable>
+              "This platform has completely transformed how we build and launch pages. It's
+              incredibly intuitive and powerful at the same time."
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 rounded-full bg-blue-400 border-4 border-white/20 overflow-hidden">
+                <img src="https://i.pravatar.cc/150?u=jane" alt="Jane" />
+              </div>
+              <div>
+                <div className="font-bold text-lg" contentEditable>
+                  Jane Cooper
+                </div>
+                <div className="text-blue-200 text-sm" contentEditable>
+                  CEO at TechFlow
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+      );
+
+    case "logo-cloud":
+      return wrapWithControls(
+        <div className="p-12 bg-white rounded-3xl border border-gray-100 flex flex-col items-center gap-12">
+          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+            Trusted by the world's most innovative teams
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 opacity-40 grayscale">
+            {["Google", "Meta", "Amazon", "Stripe", "Netflix", "Shopify"].map((brand) => (
+              <span key={brand} className="text-2xl font-black text-gray-900 tracking-tighter">
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>,
+      );
+
+    case "faq":
+      return wrapWithControls(
+        <div className="p-12 bg-gray-50 rounded-3xl border border-gray-100 max-w-4xl mx-auto w-full">
+          <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((f) => (
+              <div key={f} className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="font-bold text-lg" contentEditable>
+                    What is the pricing structure for larger teams?
+                  </span>
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
+                <div className="mt-4 text-gray-500 text-sm leading-relaxed" contentEditable>
+                  We offer custom enterprise pricing for teams larger than 50 people. Contact our
+                  sales team for a personalized quote.
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>,
+      );
+
+    case "cta":
+      return wrapWithControls(
+        <div className="p-16 bg-gradient-to-tr from-gray-900 to-blue-900 rounded-3xl text-white text-center flex flex-col items-center gap-8">
+          <h2 className="text-4xl font-black" contentEditable>
+            Ready to start building?
+          </h2>
+          <p className="text-blue-100 max-w-xl" contentEditable>
+            Join over 10,000+ creators and start building your landing pages today. No credit card
+            required.
+          </p>
+          <div className="flex gap-4">
+            <Button className="bg-white text-blue-900 hover:bg-gray-100 px-8 py-6 rounded-xl font-bold shadow-xl">
+              Get Started Now
+            </Button>
+            <Button variant="ghost" className="text-white border border-white/20 rounded-xl px-8 py-6 font-bold">
+              Contact Sales
+            </Button>
+          </div>
+        </div>,
+      );
+
+    case "contact-form":
+      return wrapWithControls(
+        <div className="p-12 bg-white rounded-3xl border border-gray-100 shadow-xl max-w-2xl mx-auto w-full flex flex-col gap-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold">Get in touch</h2>
+            <p className="text-gray-500">We'll get back to you within 24 hours.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">First Name</label>
+              <div className="h-12 bg-gray-50 rounded-xl border border-gray-100" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">Last Name</label>
+              <div className="h-12 bg-gray-50 rounded-xl border border-gray-100" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase">Email Address</label>
+            <div className="h-12 bg-gray-50 rounded-xl border border-gray-100" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase">Message</label>
+            <div className="h-32 bg-gray-50 rounded-xl border border-gray-100" />
+          </div>
+          <Button className="w-full py-6 rounded-xl bg-blue-600 font-bold shadow-lg">
+            Send Message
+          </Button>
+        </div>,
+      );
+
     case "card":
       return wrapWithControls(
         <div className="p-4 h-full">
-           <div className="bg-white border rounded-xl p-4 shadow-sm h-full">
-             <h3 className="font-semibold mb-2" contentEditable suppressContentEditableWarning>Card Title</h3>
-             <p className="text-sm text-gray-500" contentEditable suppressContentEditableWarning>Some content for the card.</p>
-           </div>
-        </div>
+          <div className="bg-white border rounded-xl p-4 shadow-sm h-full flex flex-col">
+            <h3 className="font-semibold mb-2" contentEditable suppressContentEditableWarning>
+              Card Title
+            </h3>
+            <p className="text-sm text-gray-500 flex-1" contentEditable suppressContentEditableWarning>
+              Some content for the card.
+            </p>
+          </div>
+        </div>,
       );
+
     default:
       return null;
   }
