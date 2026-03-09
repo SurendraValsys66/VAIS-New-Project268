@@ -5,8 +5,14 @@ import { cn } from "@/lib/utils";
 import { useLayout } from "@/hooks/useLayout";
 import { ComponentRenderer } from "./Renderer";
 import { Sidebar } from "./Sidebar";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
-export const BuilderCanvas: React.FC = () => {
+interface BuilderCanvasProps {
+  onBack?: () => void;
+}
+
+export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack }) => {
   const { layout, addComponent, moveComponent, updateComponent, removeComponent } = useLayout([
     {
       id: "root-hero-1",
@@ -70,12 +76,25 @@ export const BuilderCanvas: React.FC = () => {
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-100">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-12 border-b bg-white px-6 flex items-center justify-between shadow-sm z-10">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Page Builder</span>
-            <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-500 uppercase tracking-wider">
-              Draft
-            </span>
+        <header className="h-14 border-b bg-white px-6 flex items-center justify-between shadow-sm z-10">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="hover:bg-gray-100 rounded-full"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-500" />
+              </Button>
+            )}
+            <div className="h-6 w-px bg-gray-200" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900 tracking-tight">New Page</span>
+              <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-black uppercase tracking-wider">
+                Editing
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-xs text-gray-400 mr-2">Auto-saved 2 min ago</div>
