@@ -39,6 +39,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Command,
   CommandEmpty,
@@ -1119,6 +1120,26 @@ export default function CampaignRequestForm() {
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [emailGeneratorOpen, setEmailGeneratorOpen] = useState(false);
   const [landingPageDropdownOpen, setLandingPageDropdownOpen] = useState(false);
+  const [campaignMode, setCampaignMode] = useState<"live" | "tal">("live");
+  const [campaignSubmitted, setCampaignSubmitted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(7200); // 2 hours in seconds
+
+  // Handle countdown timer for TAL mode
+  React.useEffect(() => {
+    if (!campaignSubmitted || campaignMode !== "tal" || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [campaignSubmitted, campaignMode, timeRemaining]);
 
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
@@ -1135,9 +1156,15 @@ export default function CampaignRequestForm() {
   });
 
   const onSubmit = (data: CampaignFormData) => {
-    console.log("Form submitted:", data);
-    console.log("Uploaded file:", uploadedFile);
-    console.log("Selected assets:", selectedAssets);
+    if (campaignMode === "tal") {
+      console.log("TAL Campaign submitted:", data);
+      console.log("Uploaded file:", uploadedFile);
+      setCampaignSubmitted(true);
+      setTimeRemaining(7200); // Reset 2-hour timer (120 seconds for demo)
+    } else {
+      console.log("Live Campaign submitted:", data);
+      console.log("Selected assets:", selectedAssets);
+    }
   };
 
   const isFormValid = () => {
@@ -1151,6 +1178,13 @@ export default function CampaignRequestForm() {
       values.industries?.length > 0 &&
       values.employeeSize?.length > 0
     );
+  };
+
+  const formatTimeRemaining = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}h ${minutes}m ${secs}s`;
   };
 
   return (
@@ -1220,20 +1254,22 @@ export default function CampaignRequestForm() {
               </div>
             </div>
 
-            {/* Section 3: File Upload */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-sm font-semibold">
-                  3
-                </span>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  File Upload
-                </h3>
-              </div>
-              <p className="text-xs text-gray-600 mb-4">Upload TAL File</p>
+            {/* Section 3: File Upload - Only shown in TAL mode */}
+            {campaignMode === "tal" && (
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-sm font-semibold">
+                    3
+                  </span>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    File Upload
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-600 mb-4">Upload TAL File</p>
 
-              <FileUpload onFileChange={setUploadedFile} file={uploadedFile} />
-            </div>
+                <FileUpload onFileChange={setUploadedFile} file={uploadedFile} />
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN */}
@@ -1378,45 +1414,133 @@ export default function CampaignRequestForm() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-sm font-semibold">
-                    4
+                    {campaignMode === "tal" ? 4 : 3}
                   </span>
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Submit Campaign
+                    Campaign Request
                   </h3>
                 </div>
-                <DeliverablesDialog
-                  jobTitles={form.watch("jobTitles")}
-                  jobFunctions={form.watch("jobFunctions")}
-                  jobLevels={form.watch("jobLevels")}
-                  geolocations={form.watch("geolocations")}
-                  industries={form.watch("industries")}
-                  campaignName={form.watch("campaignName")}
-                  employeeSize={form.watch("employeeSize")}
-                  isFormValid={isFormValid()}
-                  selectedAssets={selectedAssets}
-                />
+                <ToggleGroup
+                  type="single"
+                  value={campaignMode}
+                  onValueChange={(value) => {
+                    if (value) setCampaignMode(value as "live" | "tal");
+                  }}
+                  className="bg-white border border-gray-300 rounded-lg p-1"
+                >
+                  <ToggleGroupItem
+                    value="live"
+                    aria-label="Live mode"
+                    className="text-xs font-medium px-3 py-1.5 data-[state=on]:bg-blue-500 data-[state=on]:text-white data-[state=off]:text-gray-700"
+                  >
+                    Live
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="tal"
+                    aria-label="TAL File mode"
+                    className="text-xs font-medium px-3 py-1.5 data-[state=on]:bg-purple-500 data-[state=on]:text-white data-[state=off]:text-gray-700"
+                  >
+                    TAL File
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               <p className="text-xs text-gray-700 mb-3">
-                Review and submit your campaign request
+                {campaignMode === "live"
+                  ? "Check deliverables instantly"
+                  : "Upload TAL file and submit your request"}
               </p>
 
-              <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                <p className="text-xs text-blue-800">
-                  All required fields have been filled. Click the button below
-                  to submit your campaign request.
-                </p>
-              </div>
+              {campaignMode === "live" ? (
+                // LIVE MODE - Show Check Deliverables Button
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                    <p className="text-xs text-blue-800">
+                      View live campaign deliverables and reach analytics in real-time.
+                    </p>
+                  </div>
+                  <DeliverablesDialog
+                    jobTitles={form.watch("jobTitles")}
+                    jobFunctions={form.watch("jobFunctions")}
+                    jobLevels={form.watch("jobLevels")}
+                    geolocations={form.watch("geolocations")}
+                    industries={form.watch("industries")}
+                    campaignName={form.watch("campaignName")}
+                    employeeSize={form.watch("employeeSize")}
+                    isFormValid={isFormValid()}
+                    selectedAssets={selectedAssets}
+                  />
+                </>
+              ) : (
+                // TAL FILE MODE - Show Submit Button or Countdown
+                <>
+                  {!campaignSubmitted ? (
+                    <>
+                      <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                        <p className="text-xs text-blue-800">
+                          All required fields have been filled. Click the button below
+                          to submit your campaign request.
+                        </p>
+                      </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium h-10"
-                disabled={!isFormValid()}
-              >
-                Submit Campaign Request
-              </Button>
+                      <Button
+                        type="submit"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium h-10"
+                        disabled={!isFormValid()}
+                      >
+                        Submit Campaign Request
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-green-50 border border-green-300 rounded-lg p-4 mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <Check className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-green-900 mb-1">
+                              Campaign Request Submitted!
+                            </h4>
+                            <p className="text-xs text-green-800 mb-3">
+                              Your campaign request has been received. We will prepare all deliverables and notify you when they are ready.
+                            </p>
+                            <div className="bg-white rounded border border-green-200 p-3">
+                              <p className="text-xs font-medium text-gray-600 mb-1">
+                                Time until deliverables are ready:
+                              </p>
+                              <p className="text-lg font-bold text-green-700">
+                                {formatTimeRemaining(timeRemaining)}
+                              </p>
+                              {timeRemaining === 0 && (
+                                <p className="text-xs text-green-700 mt-2 font-semibold">
+                                  ✓ All deliverables are ready for download!
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Asset Buttons - Below Submit Button */}
+                      {timeRemaining === 0 && (
+                        <Button
+                          type="button"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium h-10"
+                          onClick={() => {
+                            setCampaignSubmitted(false);
+                            form.reset();
+                          }}
+                        >
+                          Download Deliverables
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Asset Buttons - Below Submit Button - Only in Live mode */}
+              {campaignMode === "live" && (
               <div className="mt-4">
                 <p className="text-xs text-gray-600 mb-3 font-medium">
                   Add Campaign Assets (Optional)
@@ -1542,6 +1666,7 @@ export default function CampaignRequestForm() {
                   </button>
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>
