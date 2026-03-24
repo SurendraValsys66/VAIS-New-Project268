@@ -4,9 +4,9 @@ import { DRAG_TYPES, ComponentType, BuilderComponent } from "@/types/builder";
 import { cn } from "@/lib/utils";
 import { useLayout } from "@/hooks/useLayout";
 import { ComponentRenderer } from "./Renderer";
-import { Sidebar } from "./Sidebar";
+import { ComponentsPanel } from "./ComponentsPanel";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, Save } from "lucide-react";
 import { templateLayoutMap } from "@/components/predefine-email-templates/templates";
 
 interface BuilderCanvasProps {
@@ -90,39 +90,37 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
   // If in preview mode, show full page preview without editor UI
   if (isPreviewMode) {
     return (
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b bg-white px-6 flex items-center justify-between shadow-sm z-10">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-gray-900 tracking-tight">
-                {templateId === "online-marketing-conference"
-                  ? "Online Marketing Conference"
-                  : "New Page"}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-black uppercase tracking-wider">
-                Preview
-              </span>
-            </div>
-            <button
-              onClick={() => setIsPreviewMode(false)}
-              className="text-sm font-medium px-4 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              Back to Editor
-            </button>
-          </header>
-          <div className="flex-1 overflow-y-auto">
-            <div className="space-y-4">
-              {layout.map((comp) => (
-                <ComponentRenderer
-                  key={comp.id}
-                  component={comp}
-                  onUpdate={() => {}}
-                  onRemove={() => {}}
-                  onMove={() => {}}
-                  onAdd={() => {}}
-                />
-              ))}
-            </div>
+      <div className="flex flex-col h-[calc(100vh-120px)] bg-white">
+        <header className="h-14 border-b bg-white px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-bold text-gray-900 tracking-tight">
+              {templateId === "online-marketing-conference"
+                ? "Online Marketing Conference"
+                : "New Page"}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-black uppercase tracking-wider">
+              Preview
+            </span>
+          </div>
+          <button
+            onClick={() => setIsPreviewMode(false)}
+            className="text-sm font-medium px-4 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            Back to Editor
+          </button>
+        </header>
+        <div className="flex-1 overflow-y-auto bg-gray-50 p-8">
+          <div className="max-w-5xl mx-auto space-y-4">
+            {layout.map((comp) => (
+              <ComponentRenderer
+                key={comp.id}
+                component={comp}
+                onUpdate={() => {}}
+                onRemove={() => {}}
+                onMove={() => {}}
+                onAdd={() => {}}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -130,54 +128,70 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b bg-white px-6 flex items-center justify-between shadow-sm z-10">
-          <div className="flex items-center gap-4">
-            {onBack && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onBack}
-                className="hover:bg-gray-100 rounded-full"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-500" />
-              </Button>
-            )}
-            <div className="h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-gray-900 tracking-tight">
-                {templateId === "online-marketing-conference"
-                  ? "Online Marketing Conference"
-                  : "New Page"}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 bg-valasys-orange/10 text-valasys-orange rounded-full font-black uppercase tracking-wider">
-                Editing
-              </span>
+    <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
+      {/* Top Header */}
+      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-4 flex-1">
+          {onBack && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          )}
+          <div className="flex-1 max-w-md">
+            <div className="text-sm text-gray-600 mb-1">Landing Page</div>
+            <div className="text-lg font-semibold text-gray-900">
+              {templateId === "online-marketing-conference"
+                ? "Online Marketing Conference"
+                : "New Page"}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-400 mr-2">Auto-saved 2 min ago</div>
-            <button
-              onClick={() => setIsPreviewMode(true)}
-              className="text-sm font-medium px-4 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              Preview
-            </button>
-            <button className="text-sm font-medium px-4 py-1.5 rounded-lg bg-valasys-orange text-white hover:bg-valasys-orange/90 transition-colors shadow-sm">
-              Publish
-            </button>
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-sm text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
+              Unsaved changes
+            </span>
           </div>
-        </header>
+        </div>
 
-        <div className="flex-1 overflow-y-auto p-8 lg:p-12 scroll-area">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsPreviewMode(true)}
+            className="gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </Button>
+          <Button
+            className="gap-2 bg-valasys-orange hover:bg-valasys-orange/90 text-white"
+          >
+            <Save className="w-4 h-4" />
+            Publish
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content - Three Panel Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Components Panel */}
+        <div className="flex flex-col w-72 bg-white border-r border-gray-200 overflow-y-auto">
+          <ComponentsPanel />
+        </div>
+
+        {/* Center - Editor Canvas */}
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
           <div
             ref={drop}
             className={cn(
-              "max-w-5xl mx-auto min-h-full transition-all duration-200 ease-in-out p-6 rounded-xl",
-              isOver && canDrop && "bg-valasys-orange/5 ring-2 ring-valasys-orange ring-dashed",
-              layout.length === 0 && "bg-white border-2 border-dashed border-gray-300 flex items-center justify-center h-full",
+              "max-w-5xl mx-auto min-h-full transition-all duration-200 ease-in-out p-6 rounded-xl bg-white border border-gray-200",
+              isOver && canDrop && "ring-2 ring-valasys-orange ring-dashed bg-orange-50",
+              layout.length === 0 && "border-2 border-dashed border-gray-300 flex items-center justify-center",
             )}
           >
             {layout.length > 0 ? (
@@ -206,6 +220,14 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Right Sidebar - Properties/Settings Panel */}
+        <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto p-4">
+          <div className="text-sm text-gray-600 mb-4 font-semibold">Page Properties</div>
+          <div className="space-y-4 text-gray-500 text-xs">
+            <p>Select a component to edit its properties here.</p>
           </div>
         </div>
       </div>
