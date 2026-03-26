@@ -91,10 +91,18 @@
 @layer base {
   * {
     @apply border-border;
+    resize: none !important;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Disable resizing on contentEditable elements */
+  [contentEditable],
+  textarea {
+    resize: none !important;
+    overflow: hidden !important;
   }
 }
 
