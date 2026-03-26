@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useLayout } from "@/hooks/useLayout";
 import { ComponentRenderer } from "./Renderer";
 import { ComponentsPanel } from "./ComponentsPanel";
+import { ElementStylePanel } from "./ElementStylePanel";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Copy, Eye, Save } from "lucide-react";
 import { templateLayoutMap } from "@/components/predefine-email-templates/templates";
@@ -20,6 +21,7 @@ const DEFAULT_LAYOUT: BuilderComponent[] = [];
 
 export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId, initialLayout }) => {
   const [isPreviewMode, setIsPreviewMode] = React.useState(false);
+  const [selectedComponentId, setSelectedComponentId] = React.useState<string | null>(null);
   const { toast } = useToast();
 
   const layoutConfig = initialLayout
@@ -31,6 +33,20 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
   const { layout, addComponent, moveComponent, updateComponent, removeComponent } = useLayout(
     layoutConfig,
   );
+
+  // Helper function to find a component by ID in the entire tree
+  const findComponentById = (id: string, components = layout): BuilderComponent | null => {
+    for (const comp of components) {
+      if (comp.id === id) return comp;
+      if (comp.children) {
+        const found = findComponentById(id, comp.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const selectedComponent = selectedComponentId ? findComponentById(selectedComponentId) : null;
 
   const handleCopyLayout = async () => {
     try {
@@ -102,6 +118,8 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
                 onRemove={() => {}}
                 onMove={() => {}}
                 onAdd={() => {}}
+                onSelect={() => {}}
+                isSelected={false}
               />
             ))}
           </div>
@@ -170,14 +188,14 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
       </div>
 
       {/* Main Content - Three Panel Layout */}
-      <div className="flex min-h-0 flex-1 overflow-hidden overflow-x-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left Sidebar - Components Panel */}
         <div className="flex w-72 flex-shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white">
           <ComponentsPanel />
         </div>
 
         {/* Center - Editor Canvas */}
-        <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 p-8">
+        <div className="min-w-0 flex-1 overflow-auto bg-gray-50 p-8">
           <div
             ref={drop}
             className={cn(
@@ -196,6 +214,8 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
                     onRemove={removeComponent}
                     onMove={moveComponent}
                     onAdd={addComponent}
+                    onSelect={setSelectedComponentId}
+                    isSelected={selectedComponentId === comp.id}
                   />
                 ))}
               </div>
@@ -215,6 +235,16 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
           </div>
         </div>
 
+        {/* Right Sidebar - Styling Panel */}
+        <ElementStylePanel
+          component={selectedComponent}
+          onUpdate={(updates) => {
+            if (selectedComponentId) {
+              updateComponent(selectedComponentId, updates);
+            }
+          }}
+          onClose={() => setSelectedComponentId(null)}
+        />
       </div>
     </div>
   );

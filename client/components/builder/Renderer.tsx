@@ -21,6 +21,8 @@ interface RendererProps {
   onRemove: (id: string) => void;
   onMove: (id: string, targetParentId: string | null, targetIndex: number) => void;
   onAdd: (type: ComponentType, parentId: string | null, index?: number) => void;
+  onSelect?: (id: string) => void;
+  isSelected?: boolean;
 }
 
 export const ComponentRenderer: React.FC<RendererProps> = ({
@@ -29,6 +31,8 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
   onRemove,
   onMove,
   onAdd,
+  onSelect,
+  isSelected,
 }) => {
   const [{ isDragging }, drag] = useDrag({
     type: DRAG_TYPES.COMPONENT,
@@ -88,6 +92,8 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
             onRemove={onRemove}
             onMove={onMove}
             onAdd={onAdd}
+            onSelect={onSelect}
+            isSelected={isSelected && component.id === child.id}
           />
         ))}
         {component.children?.length === 0 && (
@@ -115,10 +121,15 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
     return (
       <div
         ref={drag}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect?.(component.id);
+        }}
         className={cn(
-          "group relative border border-transparent hover:border-valasys-orange rounded-md transition-all",
+          "group relative rounded-md transition-all cursor-pointer",
           isDragging && "opacity-30",
           component.type === "column" && "w-full md:w-auto h-full",
+          isSelected ? "border-2 border-valasys-orange shadow-lg shadow-valasys-orange/20" : "border border-transparent hover:border-valasys-orange",
         )}
         style={{
           ...(component.type === "column"
@@ -205,21 +216,18 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
     case "section":
       return wrapWithControls(
         <section className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="px-2 py-1 text-[8px] uppercase font-bold text-gray-300">Section</div>
           {renderChildren()}
         </section>,
       );
     case "row":
       return wrapWithControls(
         <div className="bg-gray-50/50 rounded p-1">
-          <div className="px-1 py-0.5 text-[8px] uppercase font-bold text-gray-300">Row</div>
           {renderChildren()}
         </div>,
       );
     case "column":
       return wrapWithControls(
         <div className="bg-valasys-orange/5 rounded border border-valasys-orange/10 min-h-[60px]">
-          <div className="px-1 py-0.5 text-[8px] uppercase font-bold text-valasys-orange/40">Column</div>
           {renderChildren()}
         </div>,
       );
