@@ -2,7 +2,7 @@ import React from "react";
 import { BuilderComponent } from "@/types/builder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronDown, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, AlignLeft, AlignCenter, AlignRight, AlignJustify } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ElementStylePanelProps {
@@ -28,6 +28,8 @@ interface StyleState {
   borderRadius: string;
   borderColor: string;
   borderWidth: string;
+  textAlign: "left" | "center" | "right" | "justify";
+  justifyContent: "flex-start" | "center" | "flex-end" | "space-between";
 }
 
 interface SpacingState {
@@ -68,6 +70,8 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
     borderRadius: "0",
     borderColor: "#000000",
     borderWidth: "0",
+    textAlign: "left",
+    justifyContent: "flex-start",
   });
 
   const [spacing, setSpacing] = React.useState<SpacingState>({
@@ -87,6 +91,7 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
   });
 
   const [expandedSections, setExpandedSections] = React.useState({
+    alignment: true,
     colors: true,
     sizing: true,
     spacing: true,
@@ -120,6 +125,8 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
         borderRadius: props.borderRadius ? String(props.borderRadius) : "0",
         borderColor: props.borderColor || "#000000",
         borderWidth: props.borderWidth ? String(props.borderWidth) : "0",
+        textAlign: props.textAlign || "left",
+        justifyContent: props.justifyContent || "flex-start",
       });
 
       // Initialize units from component
@@ -425,6 +432,74 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Alignment Section */}
+        <div>
+          <SectionHeader title="Alignment" section="alignment" />
+          {expandedSections.alignment && (
+            <div className="px-4 py-4 space-y-4 bg-gray-50">
+              {/* Text Alignment */}
+              <div>
+                <label className="text-xs font-semibold text-gray-700 block mb-2">Text Alignment</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "left" as const, icon: AlignLeft },
+                    { value: "center" as const, icon: AlignCenter },
+                    { value: "right" as const, icon: AlignRight },
+                    { value: "justify" as const, icon: AlignJustify },
+                  ].map((opt) => {
+                    const IconComponent = opt.icon;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleStyleChange("textAlign", opt.value)}
+                        className={cn(
+                          "flex-1 py-2 px-2 rounded flex items-center justify-center transition-colors border",
+                          styles.textAlign === opt.value
+                            ? "bg-blue-100 border-blue-400 text-blue-600"
+                            : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                        )}
+                        title={`Text align ${opt.value}`}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Content Alignment (Block/Justify Content) */}
+              <div>
+                <label className="text-xs font-semibold text-gray-700 block mb-2">Content Alignment</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "flex-start" as const, icon: AlignLeft, label: "Start" },
+                    { value: "center" as const, icon: AlignCenter, label: "Center" },
+                    { value: "flex-end" as const, icon: AlignRight, label: "End" },
+                    { value: "space-between" as const, icon: AlignJustify, label: "Between" },
+                  ].map((opt) => {
+                    const IconComponent = opt.icon;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleStyleChange("justifyContent", opt.value)}
+                        className={cn(
+                          "flex-1 py-2 px-2 rounded flex items-center justify-center transition-colors border",
+                          styles.justifyContent === opt.value
+                            ? "bg-blue-100 border-blue-400 text-blue-600"
+                            : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                        )}
+                        title={`Content align ${opt.label}`}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Colors Section */}
         <div>
           <SectionHeader title="Colors" section="colors" />

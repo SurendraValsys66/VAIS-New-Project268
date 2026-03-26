@@ -36,6 +36,11 @@ interface StyleState {
   backgroundColor: string;
   backgroundImage: string;
   backgroundImageUrl: string;
+  backgroundSize: "cover" | "contain" | "auto" | "stretch";
+  backgroundPosition: "top" | "center" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  backgroundRepeat: "repeat" | "no-repeat" | "repeat-x" | "repeat-y";
+  backgroundAttachment: "scroll" | "fixed";
+  backgroundOpacity: string;
   
   // Rounded Corners
   borderRadiusTopLeft: string;
@@ -77,6 +82,11 @@ export const StylePanel: React.FC<StylePanelProps> = ({ onClose }) => {
     backgroundColor: "#ffffff",
     backgroundImage: "",
     backgroundImageUrl: "",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundAttachment: "scroll",
+    backgroundOpacity: "100",
     borderRadiusTopLeft: "0",
     borderRadiusTopRight: "0",
     borderRadiusBottomLeft: "0",
@@ -607,6 +617,84 @@ export const StylePanel: React.FC<StylePanelProps> = ({ onClose }) => {
                   onChange={(e) => updateStyle("backgroundImageUrl", e.target.value)}
                   className="text-xs"
                   placeholder="https://..."
+                />
+              </div>
+
+              {/* Background Size */}
+              <div className="border-t pt-4">
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Size</label>
+                <Select value={styles.backgroundSize} onValueChange={(val) => updateStyle("backgroundSize", val)}>
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cover">Cover</SelectItem>
+                    <SelectItem value="contain">Contain</SelectItem>
+                    <SelectItem value="auto">Auto</SelectItem>
+                    <SelectItem value="stretch">Stretch</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Background Position */}
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Position</label>
+                <Select value={styles.backgroundPosition} onValueChange={(val) => updateStyle("backgroundPosition", val)}>
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                    <SelectItem value="top-left">Top Left</SelectItem>
+                    <SelectItem value="top-right">Top Right</SelectItem>
+                    <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                    <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Background Repeat */}
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Repeat</label>
+                <Select value={styles.backgroundRepeat} onValueChange={(val) => updateStyle("backgroundRepeat", val)}>
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no-repeat">No Repeat</SelectItem>
+                    <SelectItem value="repeat">Repeat</SelectItem>
+                    <SelectItem value="repeat-x">Repeat X</SelectItem>
+                    <SelectItem value="repeat-y">Repeat Y</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Background Attachment */}
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Attachment</label>
+                <Select value={styles.backgroundAttachment} onValueChange={(val) => updateStyle("backgroundAttachment", val)}>
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scroll">Scroll</SelectItem>
+                    <SelectItem value="fixed">Fixed (Parallax)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Background Opacity */}
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Opacity: {styles.backgroundOpacity}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={styles.backgroundOpacity}
+                  onChange={(e) => updateStyle("backgroundOpacity", e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>
