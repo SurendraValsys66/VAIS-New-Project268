@@ -25,6 +25,7 @@ interface RendererProps {
   onAdd: (type: ComponentType, parentId: string | null, index?: number) => void;
   onDuplicate: (id: string) => void;
   onSelect?: (id: string) => void;
+  onOpenVideoDialog?: (component: BuilderComponent) => void;
   isSelected?: boolean;
   parentId?: string | null;
   parentIndex?: number;
@@ -39,6 +40,7 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
   onAdd,
   onDuplicate,
   onSelect,
+  onOpenVideoDialog,
   isSelected,
   parentId,
   parentIndex,
@@ -243,6 +245,9 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
           }
           e.stopPropagation();
           onSelect?.(component.id);
+          if (component.type === "video") {
+            onOpenVideoDialog?.(component);
+          }
         }}
         className={cn(
           "group relative rounded-md transition-all cursor-pointer",

@@ -7,6 +7,15 @@ import { ComponentRenderer } from "./Renderer";
 import { ComponentsPanel } from "./ComponentsPanel";
 import { ElementStylePanel } from "./ElementStylePanel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ArrowLeft, Copy, Eye, Save, Monitor, Tablet, Smartphone } from "lucide-react";
 import { templateLayoutMap } from "@/components/predefine-email-templates/templates";
@@ -31,6 +40,8 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
   const [previewDevice, setPreviewDevice] = React.useState<PreviewDevice>("desktop");
   const [selectedComponentId, setSelectedComponentId] = React.useState<string | null>(null);
   const [pendingScrollComponentId, setPendingScrollComponentId] = React.useState<string | null>(null);
+  const [isVideoDialogOpen, setIsVideoDialogOpen] = React.useState(false);
+  const [videoDialogUrl, setVideoDialogUrl] = React.useState("");
   const { toast } = useToast();
 
   const layoutConfig = initialLayout
@@ -76,6 +87,21 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
   const handleComponentAdded = (newId: string) => {
     setSelectedComponentId(newId);
     setPendingScrollComponentId(newId);
+  };
+
+  const handleOpenVideoDialog = (component: BuilderComponent) => {
+    setSelectedComponentId(component.id);
+    setVideoDialogUrl(component.videoUrl || component.props?.videoUrl || component.props?.src || "");
+    setIsVideoDialogOpen(true);
+  };
+
+  const handleSaveVideoDialog = () => {
+    if (!selectedComponentId) return;
+
+    updateComponent(selectedComponentId, {
+      videoUrl: videoDialogUrl.trim(),
+    });
+    setIsVideoDialogOpen(false);
   };
 
   const handleCopyLayout = async () => {
@@ -301,6 +327,7 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
                     }}
                     onDuplicate={duplicateComponent}
                     onSelect={setSelectedComponentId}
+                    onOpenVideoDialog={handleOpenVideoDialog}
                     isSelected={selectedComponentId === comp.id}
                     parentId={null}
                     parentIndex={index}
@@ -336,6 +363,39 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
           />
         </div>
       </div>
+      <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Video</DialogTitle>
+            <DialogDescription>
+              Paste a direct video file URL to make the video block playable.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Video URL</label>
+            <Input
+              value={videoDialogUrl}
+              onChange={(e) => setVideoDialogUrl(e.target.value)}
+              placeholder="https://example.com/video.mp4"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && videoDialogUrl.trim()) {
+                  handleSaveVideoDialog();
+                }
+              }}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVideoDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveVideoDialog} disabled={!videoDialogUrl.trim()}>
+              Add Video
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
