@@ -246,7 +246,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         return (
           <div
             key={element.id}
-            className={cn(containerClasses, "relative")}
+            className={cn(
+              containerClasses,
+              "relative",
+              editingElementId && editingElementId !== element.id && "opacity-0 pointer-events-none transition-opacity"
+            )}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={() => handleElementClick(element.id)}
