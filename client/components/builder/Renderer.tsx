@@ -555,15 +555,28 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
     case "video": {
       const videoSource = component.videoUrl || component.props?.videoUrl || component.props?.src;
 
-      console.log("Video component rendering:", {
-        componentId: component.id,
-        videoUrl: component.videoUrl,
-        propsVideoUrl: component.props?.videoUrl,
-        propsSrc: component.props?.src,
-        finalSource: videoSource,
-      });
+      // Helper function to extract YouTube video ID
+      const getYouTubeId = (url: string): string | null => {
+        if (!url) return null;
+        const patterns = [
+          /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+          /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+        ];
+        for (const pattern of patterns) {
+          const match = url.match(pattern);
+          if (match) return match[1];
+        }
+        return null;
+      };
 
-      // Determine video MIME type based on file extension or data URL
+      // Helper function to extract Vimeo video ID
+      const getVimeoId = (url: string): string | null => {
+        if (!url) return null;
+        const match = url.match(/(?:vimeo\.com\/|video\/)(\d+)/);
+        return match ? match[1] : null;
+      };
+
+      // Determine video MIME type for direct files
       const getVideoType = (src: string) => {
         if (!src) return "video/mp4";
         if (src.startsWith("data:")) {
@@ -577,21 +590,45 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
       };
 
       const isValidVideoSource = videoSource && videoSource.trim().length > 0;
+      const youtubeId = isValidVideoSource ? getYouTubeId(videoSource) : null;
+      const vimeoId = isValidVideoSource ? getVimeoId(videoSource) : null;
 
       return wrapWithControls(
         <div className="p-4 h-full" style={getComponentStyles()}>
           {isValidVideoSource ? (
             <div className="h-full aspect-video overflow-hidden rounded-2xl bg-black shadow-xl">
-              <video
-                key={videoSource}
-                className="h-full w-full object-contain"
-                controls
-                playsInline
-                preload="none"
-              >
-                <source src={videoSource} type={getVideoType(videoSource)} />
-                Your browser does not support the video tag.
-              </video>
+              {youtubeId ? (
+                <iframe
+                  key={youtubeId}
+                  className="h-full w-full"
+                  src={`https://www.youtube.com/embed/${youtubeId}`}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : vimeoId ? (
+                <iframe
+                  key={vimeoId}
+                  className="h-full w-full"
+                  src={`https://player.vimeo.com/video/${vimeoId}`}
+                  title="Vimeo video player"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  key={videoSource}
+                  className="h-full w-full object-contain"
+                  controls
+                  playsInline
+                  preload="none"
+                >
+                  <source src={videoSource} type={getVideoType(videoSource)} />
+                  Your browser does not support the video tag.
+                </video>
+              )}
             </div>
           ) : (
             <div className="h-full aspect-video bg-black/90 flex items-center justify-center rounded-2xl shadow-xl overflow-hidden relative group/video cursor-pointer">
