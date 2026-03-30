@@ -1,6 +1,8 @@
 import React from "react";
 import { BuilderComponent } from "@/types/builder";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Copy, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +103,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const handleEditableFocus = (event: React.FocusEvent<HTMLElement>) => {
     setEditingElementId(event.currentTarget.dataset.elementId || null);
   };
+
+  const headingTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const paragraphTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const resizeTextarea = (textarea: HTMLTextAreaElement | null) => {
+    if (!textarea) return;
+
+    textarea.style.height = "0px";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
+  React.useLayoutEffect(() => {
+    resizeTextarea(headingTextareaRef.current);
+    resizeTextarea(paragraphTextareaRef.current);
+  }, [component.heroHeadingText, component.heroDescriptionText, editingElementId]);
 
   const handleCopyElement = (elementId: string, content: string) => {
     // Store in local clipboard state
@@ -259,32 +276,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             onClick={() => handleElementClick(element.id)}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-valasys-orange/10 text-valasys-orange text-xs font-bold uppercase tracking-wider">
-              <span
-                contentEditable={isSelected}
-                suppressContentEditableWarning
-                data-element-id={element.id}
-                onFocus={handleEditableFocus}
-                onBlur={(e) => {
-                  setEditingElementId(null);
-                  const text = e.currentTarget.textContent || "";
-                  handleElementUpdate(element.id, text);
-                }}
-                onClick={(e) => {
-                  if (isSelected) e.stopPropagation();
-                }}
-                className={cn(
-                  isSelected ? "focus:outline-none focus:ring-0 pointer-events-auto" : "pointer-events-none",
-                  "break-words"
-                )}
-                style={{
-                  direction: "ltr",
-                  wordWrap: "break-word",
-                  overflowWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {element.content}
-              </span>
+              {isSelected ? (
+                <Input
+                  value={element.content}
+                  data-element-id={element.id}
+                  onChange={(e) => handleElementUpdate(element.id, e.target.value)}
+                  onFocus={handleEditableFocus}
+                  onBlur={() => setEditingElementId(null)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-auto w-auto min-w-0 border-0 bg-transparent p-0 text-xs font-bold uppercase tracking-wider text-valasys-orange shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              ) : (
+                <span
+                  className="break-words"
+                  style={{
+                    direction: "ltr",
+                    wordWrap: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "normal",
+                  }}
+                >
+                  {element.content}
+                </span>
+              )}
             </div>
             {renderControls()}
           </div>
@@ -299,32 +313,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             onMouseLeave={onMouseLeave}
             onClick={() => handleElementClick(element.id)}
           >
-            <h1
-              contentEditable={isSelected}
-              suppressContentEditableWarning
-              data-element-id={element.id}
-              onFocus={handleEditableFocus}
-              onBlur={(e) => {
-                setEditingElementId(null);
-                const text = e.currentTarget.textContent || "";
-                handleElementUpdate(element.id, text);
-              }}
-              onClick={(e) => {
-                if (isSelected) e.stopPropagation();
-              }}
-              className={cn(
-                "text-4xl lg:text-6xl font-black text-gray-900 tracking-tight leading-none max-w-4xl break-words",
-                isSelected ? "focus:outline-none focus:ring-0 pointer-events-auto" : "pointer-events-none"
-              )}
-              style={{
-                direction: "ltr",
-                wordWrap: "break-word",
-                overflowWrap: "break-word",
-                whiteSpace: "normal",
-              }}
-            >
-              {element.content}
-            </h1>
+            {isSelected ? (
+              <Textarea
+                ref={headingTextareaRef}
+                value={element.content}
+                data-element-id={element.id}
+                onChange={(e) => {
+                  handleElementUpdate(element.id, e.target.value);
+                  resizeTextarea(e.currentTarget);
+                }}
+                onFocus={handleEditableFocus}
+                onBlur={() => setEditingElementId(null)}
+                onClick={(e) => e.stopPropagation()}
+                className="min-h-0 resize-none overflow-hidden border-0 bg-transparent p-0 text-4xl lg:text-6xl font-black text-gray-900 tracking-tight leading-none max-w-4xl shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                rows={1}
+              />
+            ) : (
+              <h1
+                className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tight leading-none max-w-4xl break-words"
+                style={{
+                  direction: "ltr",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
+                }}
+              >
+                {element.content}
+              </h1>
+            )}
             {renderControls()}
           </div>
         );
@@ -338,32 +354,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             onMouseLeave={onMouseLeave}
             onClick={() => handleElementClick(element.id)}
           >
-            <p
-              contentEditable={isSelected}
-              suppressContentEditableWarning
-              data-element-id={element.id}
-              onFocus={handleEditableFocus}
-              onBlur={(e) => {
-                setEditingElementId(null);
-                const text = e.currentTarget.textContent || "";
-                handleElementUpdate(element.id, text);
-              }}
-              onClick={(e) => {
-                if (isSelected) e.stopPropagation();
-              }}
-              className={cn(
-                "text-lg text-gray-600 max-w-2xl leading-relaxed break-words",
-                isSelected ? "focus:outline-none focus:ring-0 pointer-events-auto" : "pointer-events-none"
-              )}
-              style={{
-                direction: "ltr",
-                wordWrap: "break-word",
-                overflowWrap: "break-word",
-                whiteSpace: "normal",
-              }}
-            >
-              {element.content}
-            </p>
+            {isSelected ? (
+              <Textarea
+                ref={paragraphTextareaRef}
+                value={element.content}
+                data-element-id={element.id}
+                onChange={(e) => {
+                  handleElementUpdate(element.id, e.target.value);
+                  resizeTextarea(e.currentTarget);
+                }}
+                onFocus={handleEditableFocus}
+                onBlur={() => setEditingElementId(null)}
+                onClick={(e) => e.stopPropagation()}
+                className="min-h-0 resize-none overflow-hidden border-0 bg-transparent p-0 text-lg text-gray-600 max-w-2xl leading-relaxed shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                rows={1}
+              />
+            ) : (
+              <p
+                className="text-lg text-gray-600 max-w-2xl leading-relaxed break-words"
+                style={{
+                  direction: "ltr",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
+                }}
+              >
+                {element.content}
+              </p>
+            )}
             {renderControls()}
           </div>
         );
