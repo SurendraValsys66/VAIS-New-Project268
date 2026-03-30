@@ -33,67 +33,82 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [hoveredElementId, setHoveredElementId] = React.useState<string | null>(null);
   const [editingElementId, setEditingElementId] = React.useState<string | null>(null);
 
+  const defaultElementContent: Record<HeroElement["type"], string> = {
+    badge: "✨ New Release",
+    heading: "Build your vision faster than ever.",
+    paragraph: "The world's most advanced landing page builder. Drag, drop, and launch in minutes, not days.",
+    buttons: "CTA Buttons",
+  };
+
   // Initialize hero elements with instance IDs
   const initializeElements = (): HeroElement[] => {
     const elements: HeroElement[] = [];
+    const badges = component.heroBadges?.length
+      ? component.heroBadges
+      : [{ instanceId: "badge-0", content: component.heroBadgeText || defaultElementContent.badge }];
 
-    // Badges (can have multiple)
-    const badges = component.heroBadges || [
-      { instanceId: "badge-0", content: component.heroBadgeText || "✨ New Release" }
-    ];
-    badges.forEach(badge => {
+    badges.forEach((badge) => {
       elements.push({
         id: badge.instanceId,
         instanceId: badge.instanceId,
         type: "badge",
         label: "Badge",
-        content: badge.content || "✨ New Release",
+        content: badge.content || defaultElementContent.badge,
       });
     });
 
-    // Heading
-    if (component.heroHeadingText || !component.heroBadges) {
-      elements.push({
+    elements.push(
+      {
         id: "heading-0",
         instanceId: "heading-0",
         type: "heading",
         label: "Heading",
-        content: component.heroHeadingText || "Build your vision faster than ever.",
-      });
-    }
-
-    // Paragraph
-    if (component.heroDescriptionText || !component.heroBadges) {
-      elements.push({
+        content: component.heroHeadingText || defaultElementContent.heading,
+      },
+      {
         id: "paragraph-0",
         instanceId: "paragraph-0",
         type: "paragraph",
         label: "Paragraph",
-        content: component.heroDescriptionText || "The world's most advanced landing page builder. Drag, drop, and launch in minutes, not days.",
-      });
-    }
-
-    // Buttons
-    if (component.heroPrimaryButtonText || !component.heroBadges) {
-      elements.push({
+        content: component.heroDescriptionText || defaultElementContent.paragraph,
+      },
+      {
         id: "buttons-0",
         instanceId: "buttons-0",
         type: "buttons",
         label: "Buttons",
-        content: "CTA Buttons",
-      });
-    }
+        content: defaultElementContent.buttons,
+      },
+    );
 
     return elements;
   };
 
-  const [heroElements, setHeroElements] = React.useState<HeroElement[]>(initializeElements());
+  const [heroElements, setHeroElements] = React.useState<HeroElement[]>(() => initializeElements());
 
-  // Reinitialize elements when component changes
   React.useEffect(() => {
     setHeroElements(initializeElements());
-  }, [component.heroBadges, component.heroBadgeText, component.heroHeadingText, component.heroDescriptionText, component.heroPrimaryButtonText, component.heroSecondaryButtonText]);
+    setSelectedElementId(null);
+    setHoveredElementId(null);
+    setEditingElementId(null);
+  }, [component.id]);
 
+  React.useEffect(() => {
+    setHeroElements((prev) =>
+      prev.map((element) => {
+        if (element.instanceId === "badge-0") {
+          return { ...element, content: component.heroBadgeText || defaultElementContent.badge };
+        }
+        if (element.instanceId === "heading-0") {
+          return { ...element, content: component.heroHeadingText || defaultElementContent.heading };
+        }
+        if (element.instanceId === "paragraph-0") {
+          return { ...element, content: component.heroDescriptionText || defaultElementContent.paragraph };
+        }
+        return element;
+      }),
+    );
+  }, [component.heroBadgeText, component.heroHeadingText, component.heroDescriptionText]);
 
   const getComponentStyles = () => {
     const styles: React.CSSProperties = {};
@@ -130,42 +145,45 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       event.stopPropagation();
       event.preventDefault();
     }
+
     const newSelectedId = selectedElementId === instanceId ? null : instanceId;
+    const selectedElement = heroElements.find((element) => element.instanceId === instanceId);
+
     setSelectedElementId(newSelectedId);
-    console.log("[HeroSection] Selected element:", newSelectedId);
+    onSelect?.(component.id);
+    onUpdate(component.id, {
+      selectedHeroElement: newSelectedId ? selectedElement?.type ?? null : null,
+    });
   };
 
   const handleElementUpdate = (instanceId: string, content: string) => {
-    const element = heroElements.find(el => el.instanceId === instanceId);
+    if (instanceId === "primaryButton" || instanceId === "primaryButton-0") {
+      onUpdate(component.id, { heroPrimaryButtonText: content });
+      return;
+    }
+
+    if (instanceId === "secondaryButton" || instanceId === "secondaryButton-0") {
+      onUpdate(component.id, { heroSecondaryButtonText: content });
+      return;
+    }
+
+    const element = heroElements.find((el) => el.instanceId === instanceId);
     if (!element) return;
 
-    // For primary/secondary buttons, use specific fields
-    if (instanceId === "primaryButton-0") {
-      onUpdate(component.id, { heroPrimaryButtonText: content });
-    } else if (instanceId === "secondaryButton-0") {
-      onUpdate(component.id, { heroSecondaryButtonText: content });
-    } else {
-      // For other elements, update through arrays
-      const elementType = element.type;
-      const fieldMap: Record<string, keyof BuilderComponent> = {
-        badge: "heroBadgeText",
-        heading: "heroHeadingText",
-        paragraph: "heroDescriptionText",
-      };
+    const updatedElements = heroElements.map((el) =>
+      el.instanceId === instanceId ? { ...el, content } : el,
+    );
+    setHeroElements(updatedElements);
 
-      const fieldKey = fieldMap[elementType];
-      if (fieldKey) {
-        // Update the element in our local state
-        const updatedElements = heroElements.map(el =>
-          el.instanceId === instanceId ? { ...el, content } : el
-        );
-        setHeroElements(updatedElements);
+    const fieldMap = {
+      badge: "heroBadgeText",
+      heading: "heroHeadingText",
+      paragraph: "heroDescriptionText",
+    } as const;
 
-        // For the default element (0), update the component
-        if (instanceId.endsWith("-0")) {
-          onUpdate(component.id, { [fieldKey]: content });
-        }
-      }
+    const fieldKey = fieldMap[element.type as keyof typeof fieldMap];
+    if (fieldKey && instanceId.endsWith("-0")) {
+      onUpdate(component.id, { [fieldKey]: content });
     }
   };
 
@@ -195,38 +213,47 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   const handleDeleteElement = (instanceId: string) => {
-    const element = heroElements.find(el => el.instanceId === instanceId);
+    const element = heroElements.find((el) => el.instanceId === instanceId);
     if (!element) return;
 
-    // Can't delete if it's the only element of that type (for now, only support deleting duplicates)
-    const elementsOfSameType = heroElements.filter(el => el.type === element.type);
+    const elementsOfSameType = heroElements.filter((el) => el.type === element.type);
+
     if (elementsOfSameType.length === 1) {
-      // For the default element, reset to default content instead
-      const defaultContent: Record<string, string> = {
-        badge: "✨ New Release",
-        heading: "Build your vision faster than ever.",
-        paragraph: "The world's most advanced landing page builder. Drag, drop, and launch in minutes, not days.",
-        buttons: "CTA Buttons",
-      };
+      if (element.type === "buttons") {
+        onUpdate(component.id, {
+          heroPrimaryButtonText: "Start Free Trial",
+          heroSecondaryButtonText: "Watch Demo",
+          selectedHeroElement: null,
+        });
+      } else {
+        const resetContent = defaultElementContent[element.type];
+        const updatedElements = heroElements.map((el) =>
+          el.instanceId === instanceId ? { ...el, content: resetContent } : el,
+        );
+        setHeroElements(updatedElements);
 
-      const updateMap: Record<string, keyof BuilderComponent> = {
-        badge: "heroBadgeText",
-        heading: "heroHeadingText",
-        paragraph: "heroDescriptionText",
-        buttons: "buttons",
-      };
+        const updateMap = {
+          badge: "heroBadgeText",
+          heading: "heroHeadingText",
+          paragraph: "heroDescriptionText",
+        } as const;
 
-      const key = updateMap[element.type];
-      if (key && defaultContent[element.type]) {
-        onUpdate(component.id, { [key]: defaultContent[element.type] });
+        const key = updateMap[element.type as keyof typeof updateMap];
+        if (key) {
+          onUpdate(component.id, {
+            [key]: resetContent,
+            selectedHeroElement: null,
+          });
+        }
       }
-      setSelectedElementId(null);
     } else {
-      // Remove the element from the array
-      const updatedElements = heroElements.filter(el => el.instanceId !== instanceId);
-      setHeroElements(updatedElements);
-      setSelectedElementId(null);
+      setHeroElements(heroElements.filter((el) => el.instanceId !== instanceId));
+      onUpdate(component.id, { selectedHeroElement: null });
     }
+
+    setSelectedElementId(null);
+    setHoveredElementId(null);
+    setEditingElementId(null);
   };
 
   const handleAddElement = (instanceId: string) => {
@@ -339,7 +366,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
     switch (element.type) {
       case "badge":
-        const badgeContent = isSelected ? getDisplayContent("badge") : (element.content || getDefaultContent("badge"));
+        const badgeContent = element.content || getDefaultContent("badge");
         const badgeFontSize = component.badgeFontSize ? `${component.badgeFontSize}${component.badgeFontSizeUnit || "rem"}` : undefined;
         const badgeWidth = component.badgeWidth ? `${component.badgeWidth}${component.badgeWidthUnit || "%"}` : undefined;
         const badgeTextAlign = component.badgeTextAlign || "center";
@@ -388,7 +415,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         );
 
       case "heading":
-        const headingContent = isSelected ? getDisplayContent("heading") : (element.content || getDefaultContent("heading"));
+        const headingContent = element.content || getDefaultContent("heading");
         const headingWidth = component.headingWidth ? `${component.headingWidth}${component.headingWidthUnit || "%"}` : undefined;
         const headingFontSize = component.headingFontSize ? `${component.headingFontSize}${component.headingFontSizeUnit || "rem"}` : undefined;
         const headingTextAlign = component.headingTextAlign || "center";
@@ -442,7 +469,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         );
 
       case "paragraph":
-        const paragraphContent = isSelected ? getDisplayContent("paragraph") : (element.content || getDefaultContent("paragraph"));
+        const paragraphContent = element.content || getDefaultContent("paragraph");
         const paragraphWidth = component.paragraphWidth ? `${component.paragraphWidth}${component.paragraphWidthUnit || "%"}` : undefined;
         const paragraphFontSize = component.paragraphFontSize ? `${component.paragraphFontSize}${component.paragraphFontSizeUnit || "rem"}` : undefined;
         const paragraphTextAlign = component.paragraphTextAlign || "center";

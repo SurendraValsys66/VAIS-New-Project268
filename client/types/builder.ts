@@ -70,6 +70,7 @@ export interface BuilderComponent {
   contentText?: string;
   // Hero section properties
   heroBadgeText?: string;
+  heroBadges?: Array<{ instanceId: string; content: string }>;
   heroHeadingText?: string;
   heroDescriptionText?: string;
   heroPrimaryButtonText?: string;
