@@ -63,16 +63,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const getComponentStyles = () => {
     const styles: React.CSSProperties = {};
-    // Don't apply width to hero container - it should be full width
-    // Width adjustments should only affect internal elements, not the container
+    // IMPORTANT: Do NOT apply width to the hero container - it should be full width
+    // Width adjustments through the styling panel are for individual elements only
     if (component.height) {
       const unit = component.heightUnit || "px";
       styles.minHeight = `${component.height}${unit}`;
     }
-    if (component.padding) {
+    if (component.paddingTop || component.paddingRight || component.paddingBottom || component.paddingLeft) {
+      styles.paddingTop = `${component.paddingTop || 0}px`;
+      styles.paddingRight = `${component.paddingRight || 0}px`;
+      styles.paddingBottom = `${component.paddingBottom || 0}px`;
+      styles.paddingLeft = `${component.paddingLeft || 0}px`;
+    } else if (component.padding) {
       styles.padding = `${component.padding}px`;
     }
-    if (component.margin) {
+    if (component.marginTop || component.marginRight || component.marginBottom || component.marginLeft) {
+      styles.marginTop = `${component.marginTop || 0}px`;
+      styles.marginRight = `${component.marginRight || 0}px`;
+      styles.marginBottom = `${component.marginBottom || 0}px`;
+      styles.marginLeft = `${component.marginLeft || 0}px`;
+    } else if (component.margin) {
       styles.margin = `${component.margin}px`;
     }
     if (component.backgroundColor) {
@@ -283,7 +293,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     switch (element.type) {
       case "badge":
         const badgeContent = isSelected ? getDisplayContent("badge") : (element.content || getDefaultContent("badge"));
-        const badgeFontSize = component.badgeFontSize ? `${component.badgeFontSize}${component.badgeFontSizeUnit || "px"}` : undefined;
+        const badgeFontSize = component.badgeFontSize ? `${component.badgeFontSize}${component.badgeFontSizeUnit || "rem"}` : undefined;
         const badgeWidth = component.badgeWidth ? `${component.badgeWidth}${component.badgeWidthUnit || "%"}` : undefined;
         return (
           <div
@@ -332,7 +342,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       case "heading":
         const headingContent = isSelected ? getDisplayContent("heading") : (element.content || getDefaultContent("heading"));
         const headingWidth = component.headingWidth ? `${component.headingWidth}${component.headingWidthUnit || "%"}` : undefined;
-        const headingFontSize = component.headingFontSize ? `${component.headingFontSize}${component.headingFontSizeUnit || "px"}` : undefined;
+        const headingFontSize = component.headingFontSize ? `${component.headingFontSize}${component.headingFontSizeUnit || "rem"}` : undefined;
         return (
           <div
             key={element.id}
@@ -382,7 +392,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       case "paragraph":
         const paragraphContent = isSelected ? getDisplayContent("paragraph") : (element.content || getDefaultContent("paragraph"));
         const paragraphWidth = component.paragraphWidth ? `${component.paragraphWidth}${component.paragraphWidthUnit || "%"}` : undefined;
-        const paragraphFontSize = component.paragraphFontSize ? `${component.paragraphFontSize}${component.paragraphFontSizeUnit || "px"}` : undefined;
+        const paragraphFontSize = component.paragraphFontSize ? `${component.paragraphFontSize}${component.paragraphFontSizeUnit || "rem"}` : undefined;
         return (
           <div
             key={element.id}
@@ -431,7 +441,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       case "buttons":
         const buttonsWidth = component.buttonWidth ? `${component.buttonWidth}${component.buttonWidthUnit || "%"}` : undefined;
-        const buttonFontSize = component.buttonFontSize ? `${component.buttonFontSize}${component.buttonFontSizeUnit || "px"}` : undefined;
+        const buttonFontSize = component.buttonFontSize ? `${component.buttonFontSize}${component.buttonFontSizeUnit || "rem"}` : undefined;
         return (
           <div
             key={element.id}
