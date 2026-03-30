@@ -410,7 +410,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         return (
           <div
             key={element.id}
-            className={cn(containerClasses, "relative")}
+            className={cn(containerClasses, "relative w-full self-stretch")}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={() => handleElementClick(element.id)}
@@ -427,8 +427,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onFocus={handleEditableFocus}
                 onBlur={() => setEditingElementId(null)}
                 onClick={(e) => e.stopPropagation()}
-                className="min-h-0 resize-none overflow-hidden border-0 bg-transparent p-0 text-gray-600 leading-relaxed shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="min-h-0 w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-gray-600 leading-relaxed shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 style={{
+                  width: "100%",
                   maxWidth: paragraphWidth || "100%",
                   fontSize: paragraphFontSize || "1.125rem",
                 }}
@@ -436,13 +437,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               />
             ) : (
               <p
-                className="text-gray-600 leading-relaxed break-words"
+                className="w-full text-gray-600 leading-relaxed break-words"
                 style={{
                   direction: "ltr",
                   wordWrap: "break-word",
                   overflowWrap: "break-word",
                   whiteSpace: "normal",
-                  maxWidth: paragraphWidth || "100%",
+                  width: "100%",
+                  maxWidth: "100%",
                   fontSize: paragraphFontSize || "1.125rem",
                 }}
               >

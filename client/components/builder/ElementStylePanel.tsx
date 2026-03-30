@@ -83,6 +83,13 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
   onUpdate,
   onClose,
 }) => {
+  const clampPercentWidth = React.useCallback((value: string) => {
+    if (value === "") return "";
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return value;
+    return String(Math.min(100, Math.max(0, numericValue)));
+  }, []);
+
   const [styles, setStyles] = React.useState<StyleState>({
     backgroundColor: "#ffffff",
     textColor: "#000000",
@@ -153,7 +160,6 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
   const [expandedSections, setExpandedSections] = React.useState({
     content: true,
     buttons: true,
-    elementSizing: true,
     alignment: true,
     background: true,
     colors: true,
@@ -262,13 +268,13 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
         heroPrimaryButtonText: component.heroPrimaryButtonText || "",
         heroSecondaryButtonText: component.heroSecondaryButtonText || "",
         // Hero element sizing
-        badgeWidth: component.badgeWidth ? String(component.badgeWidth) : "",
+        badgeWidth: component.badgeWidth ? clampPercentWidth(String(component.badgeWidth)) : "",
         badgeFontSize: component.badgeFontSize ? String(component.badgeFontSize) : "",
-        headingWidth: component.headingWidth ? String(component.headingWidth) : "",
+        headingWidth: component.headingWidth ? clampPercentWidth(String(component.headingWidth)) : "",
         headingFontSize: component.headingFontSize ? String(component.headingFontSize) : "",
-        paragraphWidth: component.paragraphWidth ? String(component.paragraphWidth) : "",
+        paragraphWidth: component.paragraphWidth ? clampPercentWidth(String(component.paragraphWidth)) : "",
         paragraphFontSize: component.paragraphFontSize ? String(component.paragraphFontSize) : "",
-        buttonWidth: component.buttonWidth ? String(component.buttonWidth) : "",
+        buttonWidth: component.buttonWidth ? clampPercentWidth(String(component.buttonWidth)) : "",
         buttonFontSize: component.buttonFontSize ? String(component.buttonFontSize) : "",
         selectedHeroElement: component.selectedHeroElement || "",
       });
@@ -296,14 +302,19 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
     component?.buttonWidth,
     component?.buttonFontSize,
     component?.selectedHeroElement,
+    clampPercentWidth,
   ]);
 
   const handleStyleChange = React.useCallback(
     (key: keyof StyleState, value: string | string[] | "all" | "desktop" | "tablet" | "mobile") => {
       // Update local state immediately for responsive UI
+      const nextValue =
+        key === "badgeWidth" || key === "headingWidth" || key === "paragraphWidth" || key === "buttonWidth"
+          ? clampPercentWidth(value as string)
+          : value;
       setStyles((prev) => ({
         ...prev,
-        [key]: value,
+        [key]: nextValue,
       }));
 
       // Prepare the update for the parent
@@ -327,7 +338,7 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
         key === "buttonFontSize" ||
         key === "selectedHeroElement"
       ) {
-        updates[key] = value;
+        updates[key] = nextValue;
       } else if (key === "displayConditions" || key === "contentVisibility") {
         // These are special properties that don't need conversion
         updates[key] = value;
@@ -376,7 +387,7 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
         pendingUpdatesRef.current = {};
       }, 300); // 300ms debounce
     },
-    [onUpdate]
+    [onUpdate, clampPercentWidth]
   );
 
   const handleGroupPaddingToggle = () => {
@@ -801,128 +812,6 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
           </div>
         )}
 
-        {/* Hero Element Sizing Section */}
-        {component.type === "hero" && component.selectedHeroElement && (
-          <div>
-            <SectionHeader title={`Edit ${component.selectedHeroElement.charAt(0).toUpperCase() + component.selectedHeroElement.slice(1)}`} section="elementSizing" />
-            {expandedSections.elementSizing && (
-              <div className="px-4 py-3 space-y-4 bg-gray-50 border-b border-gray-200">
-                {/* Badge Controls */}
-                {component.selectedHeroElement === "badge" && (
-                  <>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Width</label>
-                      <Input
-                        type="number"
-                        value={styles.badgeWidth}
-                        onChange={(e) => handleStyleChange("badgeWidth" as any, e.target.value)}
-                        placeholder="auto"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Font Size</label>
-                      <Input
-                        type="number"
-                        value={styles.badgeFontSize}
-                        onChange={(e) => handleStyleChange("badgeFontSize" as any, e.target.value)}
-                        placeholder="0.75"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">rem</span>
-                    </div>
-                  </>
-                )}
-
-                {/* Heading Controls */}
-                {component.selectedHeroElement === "heading" && (
-                  <>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Width</label>
-                      <Input
-                        type="number"
-                        value={styles.headingWidth}
-                        onChange={(e) => handleStyleChange("headingWidth" as any, e.target.value)}
-                        placeholder="auto"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Font Size</label>
-                      <Input
-                        type="number"
-                        value={styles.headingFontSize}
-                        onChange={(e) => handleStyleChange("headingFontSize" as any, e.target.value)}
-                        placeholder="3.75"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">rem</span>
-                    </div>
-                  </>
-                )}
-
-                {/* Description/Paragraph Controls */}
-                {component.selectedHeroElement === "paragraph" && (
-                  <>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Width</label>
-                      <Input
-                        type="number"
-                        value={styles.paragraphWidth}
-                        onChange={(e) => handleStyleChange("paragraphWidth" as any, e.target.value)}
-                        placeholder="auto"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Font Size</label>
-                      <Input
-                        type="number"
-                        value={styles.paragraphFontSize}
-                        onChange={(e) => handleStyleChange("paragraphFontSize" as any, e.target.value)}
-                        placeholder="1.125"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">rem</span>
-                    </div>
-                  </>
-                )}
-
-                {/* Buttons Controls */}
-                {component.selectedHeroElement === "buttons" && (
-                  <>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Width</label>
-                      <Input
-                        type="number"
-                        value={styles.buttonWidth}
-                        onChange={(e) => handleStyleChange("buttonWidth" as any, e.target.value)}
-                        placeholder="auto"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">%</span>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <label className="text-xs text-gray-600 min-w-16">Font Size</label>
-                      <Input
-                        type="number"
-                        value={styles.buttonFontSize}
-                        onChange={(e) => handleStyleChange("buttonFontSize" as any, e.target.value)}
-                        placeholder="1.125"
-                        className="flex-1 text-xs h-8"
-                      />
-                      <span className="text-xs text-gray-500">rem</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Alignment Section */}
         <div>
           <SectionHeader title="Alignment" section="alignment" />
@@ -1301,7 +1190,7 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
         <div>
           <SectionHeader title="Sizing" section="sizing" />
           {expandedSections.sizing && (
-            <>
+            <div className="px-4 py-3 space-y-4 bg-gray-50 border-b border-gray-200">
               {component.type !== "hero" && (
                 <SizingInput
                   label="Width"
@@ -1333,7 +1222,131 @@ export const ElementStylePanel: React.FC<ElementStylePanelProps> = ({
                   property="fontSize"
                 />
               )}
-            </>
+
+              {component.type === "hero" && component.selectedHeroElement && (
+                <div className="pt-2 border-t border-gray-200 space-y-4">
+                  <div className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Edit {component.selectedHeroElement.charAt(0).toUpperCase() + component.selectedHeroElement.slice(1)}
+                  </div>
+
+                  {component.selectedHeroElement === "badge" && (
+                    <>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Width</label>
+                        <Input
+                          type="number"
+                          value={styles.badgeWidth}
+                          onChange={(e) => handleStyleChange("badgeWidth" as any, e.target.value)}
+                          min={0}
+                          max={100}
+                          placeholder="auto"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">%</span>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Font Size</label>
+                        <Input
+                          type="number"
+                          value={styles.badgeFontSize}
+                          onChange={(e) => handleStyleChange("badgeFontSize" as any, e.target.value)}
+                          placeholder="0.75"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">rem</span>
+                      </div>
+                    </>
+                  )}
+
+                  {component.selectedHeroElement === "heading" && (
+                    <>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Width</label>
+                        <Input
+                          type="number"
+                          value={styles.headingWidth}
+                          onChange={(e) => handleStyleChange("headingWidth" as any, e.target.value)}
+                          min={0}
+                          max={100}
+                          placeholder="auto"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">%</span>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Font Size</label>
+                        <Input
+                          type="number"
+                          value={styles.headingFontSize}
+                          onChange={(e) => handleStyleChange("headingFontSize" as any, e.target.value)}
+                          placeholder="3.75"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">rem</span>
+                      </div>
+                    </>
+                  )}
+
+                  {component.selectedHeroElement === "paragraph" && (
+                    <>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Width</label>
+                        <Input
+                          type="number"
+                          value={styles.paragraphWidth}
+                          onChange={(e) => handleStyleChange("paragraphWidth" as any, e.target.value)}
+                          min={0}
+                          max={100}
+                          placeholder="auto"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">%</span>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Font Size</label>
+                        <Input
+                          type="number"
+                          value={styles.paragraphFontSize}
+                          onChange={(e) => handleStyleChange("paragraphFontSize" as any, e.target.value)}
+                          placeholder="1.125"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">rem</span>
+                      </div>
+                    </>
+                  )}
+
+                  {component.selectedHeroElement === "buttons" && (
+                    <>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Width</label>
+                        <Input
+                          type="number"
+                          value={styles.buttonWidth}
+                          onChange={(e) => handleStyleChange("buttonWidth" as any, e.target.value)}
+                          min={0}
+                          max={100}
+                          placeholder="auto"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">%</span>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <label className="text-xs text-gray-600 min-w-16">Font Size</label>
+                        <Input
+                          type="number"
+                          value={styles.buttonFontSize}
+                          onChange={(e) => handleStyleChange("buttonFontSize" as any, e.target.value)}
+                          placeholder="1.125"
+                          className="flex-1 text-xs h-8"
+                        />
+                        <span className="text-xs text-gray-500">rem</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
