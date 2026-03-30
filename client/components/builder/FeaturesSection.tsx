@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Copy, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface FeaturesSectionProps {
   block: LandingPageBlock;
@@ -20,6 +19,12 @@ interface Feature {
   icon: string;
   title: string;
   description: string;
+}
+
+interface HeaderElement {
+  id: string;
+  type: "heading" | "description";
+  text: string;
 }
 
 export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
@@ -39,8 +44,37 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
   const [localSelectedHeaderElement, setLocalSelectedHeaderElement] = React.useState<"heading" | "description" | null>(
     selectedHeaderElement as "heading" | "description" | null
   );
+  const [isClickingControl, setIsClickingControl] = React.useState(false);
 
   const features: Feature[] = (block.properties.features || []) as Feature[];
+
+  // Initialize header elements from block properties (backward compatible)
+  const initializeHeaderElements = (): HeaderElement[] => {
+    if (block.properties.headerElements) {
+      return block.properties.headerElements as HeaderElement[];
+    }
+    // Backward compatibility: convert old heading/description to new format
+    const elements: HeaderElement[] = [];
+    if (block.properties.heading) {
+      elements.push({
+        id: `heading-${Date.now()}`,
+        type: "heading",
+        text: block.properties.heading,
+      });
+    }
+    if (block.properties.description) {
+      elements.push({
+        id: `description-${Date.now()}`,
+        type: "description",
+        text: block.properties.description,
+      });
+    }
+    return elements;
+  };
+
+  const [headerElements, setHeaderElements] = React.useState<HeaderElement[]>(
+    initializeHeaderElements()
+  );
 
   const handleCopyFeature = (featureId: string) => {
     const featureToCopy = features.find(f => f.id === featureId);
@@ -162,44 +196,68 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
     );
   };
 
-  const handleCopyHeaderElement = (elementType: "heading" | "description") => {
-    const content = elementType === "heading"
-      ? block.properties.heading
-      : block.properties.description;
-    navigator.clipboard.writeText(content || "");
-    toast.success("Copied to clipboard");
+  const handleCopyHeaderElement = (elementId: string) => {
+    const element = headerElements.find(e => e.id === elementId);
+    if (!element) return;
+
+    // Create a duplicate with a new ID and insert after the original
+    const newElement: HeaderElement = {
+      ...element,
+      id: `${element.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+
+    const elementIndex = headerElements.findIndex(e => e.id === elementId);
+    const updatedElements = [...headerElements];
+    updatedElements.splice(elementIndex + 1, 0, newElement);
+
+    setHeaderElements(updatedElements);
+    onUpdate({
+      ...block,
+      properties: {
+        ...block.properties,
+        headerElements: updatedElements,
+      },
+    });
+
+    setLocalSelectedHeaderElement(newElement.id);
+    onSelect?.({ type: newElement.type, id: newElement.id });
   };
 
-  const handleAddHeaderElement = (elementType: "heading" | "description") => {
-    // For header elements, Add creates a copy of the content
-    const content = elementType === "heading"
-      ? block.properties.heading
-      : block.properties.description;
-
-    if (!content) {
-      toast.error("No content to duplicate");
-      return;
-    }
-
-    // Copy to clipboard as a way to add/duplicate
-    navigator.clipboard.writeText(content || "");
-    toast.success("Copied to clipboard - paste anywhere to use");
+  const handleAddHeaderElement = (elementId: string) => {
+    // Add is the same as copy
+    handleCopyHeaderElement(elementId);
   };
 
-  const handleDeleteHeaderElement = (elementType: "heading" | "description") => {
-    if (elementType === "heading") {
-      handleUpdateBlock({ heading: "" });
-      toast.success("Heading cleared");
-    } else {
-      handleUpdateBlock({ description: "" });
-      toast.success("Description cleared");
-    }
+  const handleDeleteHeaderElement = (elementId: string) => {
+    const updatedElements = headerElements.filter(e => e.id !== elementId);
+    setHeaderElements(updatedElements);
+    onUpdate({
+      ...block,
+      properties: {
+        ...block.properties,
+        headerElements: updatedElements,
+      },
+    });
     setLocalSelectedHeaderElement(null);
     onSelect?.(null);
   };
 
-  const renderHeaderControls = (elementType: "heading" | "description") => {
-    if (localSelectedHeaderElement !== elementType) {
+  const handleUpdateHeaderElement = (elementId: string, newText: string) => {
+    const updatedElements = headerElements.map(e =>
+      e.id === elementId ? { ...e, text: newText } : e
+    );
+    setHeaderElements(updatedElements);
+    onUpdate({
+      ...block,
+      properties: {
+        ...block.properties,
+        headerElements: updatedElements,
+      },
+    });
+  };
+
+  const renderHeaderControls = (elementId: string) => {
+    if (localSelectedHeaderElement !== elementId) {
       return null;
     }
 
@@ -211,10 +269,16 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
       >
         <button
           type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsClickingControl(true);
+          }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleCopyHeaderElement(elementType);
+            handleCopyHeaderElement(elementId);
+            setIsClickingControl(false);
           }}
           className="h-6 w-6 flex items-center justify-center hover:bg-valasys-orange/10 rounded transition-colors cursor-pointer"
           title="Copy text"
@@ -223,10 +287,16 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsClickingControl(true);
+          }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleAddHeaderElement(elementType);
+            handleAddHeaderElement(elementId);
+            setIsClickingControl(false);
           }}
           className="h-6 w-6 flex items-center justify-center hover:bg-valasys-orange/10 rounded transition-colors cursor-pointer"
           title="Add/Duplicate"
@@ -235,10 +305,16 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsClickingControl(true);
+          }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleDeleteHeaderElement(elementType);
+            handleDeleteHeaderElement(elementId);
+            setIsClickingControl(false);
           }}
           className="h-6 w-6 flex items-center justify-center hover:bg-red-100 text-red-500 rounded transition-colors cursor-pointer"
           title="Delete"
@@ -259,74 +335,51 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
       <div className="space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="relative">
-            <h2
-              className={cn(
-                "text-3xl font-bold text-gray-900 cursor-text p-2 rounded transition-all outline-none",
-                localSelectedHeaderElement === "heading"
-                  ? "border-2 border-solid border-valasys-orange"
-                  : hoveredHeaderElement === "heading"
-                  ? "border-2 border-dashed border-valasys-orange bg-gray-50"
-                  : "border-2 border-transparent hover:bg-gray-50"
-              )}
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e) => {
-                handleUpdateBlock({ heading: e.currentTarget.textContent });
-                setLocalSelectedHeaderElement(null);
-                onSelect?.(null);
-              }}
-              onFocus={(e) => {
-                setLocalSelectedHeaderElement("heading");
-                onSelect?.({ type: "heading" });
-              }}
-              onMouseEnter={() => setHoveredHeaderElement("heading")}
-              onMouseLeave={() => setHoveredHeaderElement(null)}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (localSelectedHeaderElement === "heading") return;
-                setLocalSelectedHeaderElement("heading");
-                onSelect?.({ type: "heading" });
-              }}
-            >
-              {block.properties.heading || "Why Choose Us"}
-            </h2>
-            {renderHeaderControls("heading")}
-          </div>
-          <div className="relative">
-            <p
-              className={cn(
-                "text-gray-600 cursor-text p-2 rounded transition-all outline-none",
-                localSelectedHeaderElement === "description"
-                  ? "border-2 border-solid border-valasys-orange"
-                  : hoveredHeaderElement === "description"
-                  ? "border-2 border-dashed border-valasys-orange bg-gray-50"
-                  : "border-2 border-transparent hover:bg-gray-50"
-              )}
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e) => {
-                handleUpdateBlock({ description: e.currentTarget.textContent });
-                setLocalSelectedHeaderElement(null);
-                onSelect?.(null);
-              }}
-              onFocus={(e) => {
-                setLocalSelectedHeaderElement("description");
-                onSelect?.({ type: "description" });
-              }}
-              onMouseEnter={() => setHoveredHeaderElement("description")}
-              onMouseLeave={() => setHoveredHeaderElement(null)}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (localSelectedHeaderElement === "description") return;
-                setLocalSelectedHeaderElement("description");
-                onSelect?.({ type: "description" });
-              }}
-            >
-              {block.properties.description || "Discover the key features that make our product special"}
-            </p>
-            {renderHeaderControls("description")}
-          </div>
+          {headerElements.map((element) => {
+            const isHeading = element.type === "heading";
+            const TagName = isHeading ? "h2" : "p";
+
+            return (
+              <div key={element.id} className="relative">
+                <TagName
+                  className={cn(
+                    isHeading
+                      ? "text-3xl font-bold text-gray-900 cursor-text p-2 rounded transition-all outline-none"
+                      : "text-gray-600 cursor-text p-2 rounded transition-all outline-none",
+                    localSelectedHeaderElement === element.id
+                      ? "border-2 border-solid border-valasys-orange"
+                      : hoveredHeaderElement === element.id
+                      ? "border-2 border-dashed border-valasys-orange bg-gray-50"
+                      : "border-2 border-transparent hover:bg-gray-50"
+                  )}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => {
+                    handleUpdateHeaderElement(element.id, e.currentTarget.textContent || "");
+                    if (!isClickingControl) {
+                      setLocalSelectedHeaderElement(null);
+                      onSelect?.(null);
+                    }
+                  }}
+                  onFocus={(e) => {
+                    setLocalSelectedHeaderElement(element.id);
+                    onSelect?.({ type: element.type, id: element.id });
+                  }}
+                  onMouseEnter={() => setHoveredHeaderElement(element.id)}
+                  onMouseLeave={() => setHoveredHeaderElement(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (localSelectedHeaderElement === element.id) return;
+                    setLocalSelectedHeaderElement(element.id);
+                    onSelect?.({ type: element.type, id: element.id });
+                  }}
+                >
+                  {element.text || (isHeading ? "Why Choose Us" : "Discover the key features that make our product special")}
+                </TagName>
+                {renderHeaderControls(element.id)}
+              </div>
+            );
+          })}
         </div>
 
         {/* Features Grid */}

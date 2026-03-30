@@ -10,6 +10,7 @@ export type ComponentType =
   | "divider"
   | "hero"
   | "feature-grid"
+  | "features"
   | "pricing"
   | "testimonials"
   | "logo-cloud"
@@ -99,6 +100,14 @@ export interface BuilderComponent {
   buttonTextAlign?: "left" | "center" | "right" | "justify";
   // Track which hero element is currently selected for editing
   selectedHeroElement?: "badge" | "heading" | "paragraph" | "buttons" | null;
+  // Features section properties
+  headerElements?: Array<{ id: string; type: "heading" | "description"; text: string }>;
+  selectedHeaderElement?: string;
+  // Feature-grid specific properties
+  features?: Array<{ id: string; icon: string; title: string; description: string }>;
+  selectedFeatureId?: string;
+  featureGridHeading?: string;
+  featureGridDescription?: string;
 }
 
 export const DRAG_TYPES = {

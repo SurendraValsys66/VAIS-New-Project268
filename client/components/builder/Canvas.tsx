@@ -439,8 +439,23 @@ export const BuilderCanvas: React.FC<BuilderCanvasProps> = ({ onBack, templateId
             component={selectedComponent}
             onUpdate={(updates) => {
               if (selectedComponentId) {
+                // Handle features header element updates
+                if (selectedComponent?.type === "features" && selectedComponent?.selectedHeaderElement && updates.headerElementText !== undefined) {
+                  const { headerElementText, ...otherUpdates } = updates as any;
+                  const headerElements = selectedComponent.headerElements || [];
+                  const updatedHeaderElements = headerElements.map((element: any) =>
+                    element.id === selectedComponent.selectedHeaderElement
+                      ? { ...element, text: headerElementText }
+                      : element
+                  );
+
+                  updateComponent(selectedComponentId, {
+                    ...otherUpdates,
+                    headerElements: updatedHeaderElements,
+                  });
+                }
                 // Handle feature-grid feature content updates
-                if (selectedComponent?.type === "feature-grid" && selectedComponent?.selectedFeatureId) {
+                else if (selectedComponent?.type === "feature-grid" && selectedComponent?.selectedFeatureId) {
                   const { featureIcon, featureTitle, featureDescription, ...otherUpdates } = updates as any;
 
                   if (featureIcon !== undefined || featureTitle !== undefined || featureDescription !== undefined) {
