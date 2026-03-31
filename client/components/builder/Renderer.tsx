@@ -232,6 +232,9 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
     return styles;
   };
 
+  const [hoveredPricingPlan, setHoveredPricingPlan] = React.useState<string | null>(null);
+  const [selectedPricingPlan, setSelectedPricingPlan] = React.useState<string | null>(null);
+
   if (!isVisibleOnPreviewDevice()) {
     return null;
   }
@@ -727,44 +730,68 @@ export const ComponentRenderer: React.FC<RendererProps> = ({
             <p className="text-gray-500" contentEditable suppressContentEditableWarning>Choose the plan that's right for you.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {["Starter", "Pro", "Enterprise"].map((plan, i) => (
-              <div
-                key={plan}
-                className={cn(
-                  "p-8 rounded-3xl border-2 transition-all space-y-6 flex flex-col",
-                  i === 1 ? "border-valasys-orange shadow-2xl scale-105 relative z-10" : "border-gray-100",
-                )}
-              >
-                {i === 1 && (
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-valasys-orange text-white text-[10px] font-black rounded-full uppercase">
-                    Most Popular
-                  </span>
-                )}
-                <div>
-                  <h3 className="text-xl font-bold mb-1" contentEditable suppressContentEditableWarning>{plan}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black">${[19, 49, 99][i]}</span>
-                    <span className="text-gray-400 text-sm">/mo</span>
-                  </div>
-                </div>
-                <ul className="space-y-3 flex-1">
-                  {[1, 2, 3, 4].map((j) => (
-                    <li key={j} className="flex items-center gap-3 text-sm text-gray-600">
-                      <Check className="w-4 h-4 text-green-500" />
-                      <span contentEditable suppressContentEditableWarning>{`Benefit number ${j}`}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
+            {["Starter", "Pro", "Enterprise"].map((plan, i) => {
+              const isFeaturedPlan = i === 1;
+              const isHoveredPlan = hoveredPricingPlan === plan;
+              const isSelectedPlan = selectedPricingPlan === plan;
+
+              return (
+                <div
+                  key={plan}
+                  onMouseEnter={() => setHoveredPricingPlan(plan)}
+                  onMouseLeave={() =>
+                    setHoveredPricingPlan((currentPlan) =>
+                      currentPlan === plan ? null : currentPlan,
+                    )
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPricingPlan(plan);
+                    onSelect?.(component.id);
+                  }}
                   className={cn(
-                    "w-full py-6 font-bold rounded-xl",
-                    i === 1 ? "bg-valasys-orange hover:bg-valasys-orange/90" : "bg-gray-900",
+                    "p-8 rounded-3xl border-2 transition-all space-y-6 flex flex-col cursor-pointer",
+                    isFeaturedPlan && "shadow-2xl scale-105 relative z-10",
+                    isSelectedPlan
+                      ? "border-valasys-orange"
+                      : isHoveredPlan
+                        ? "border-dashed border-valasys-orange"
+                        : isFeaturedPlan
+                          ? "border-valasys-orange"
+                          : "border-gray-100",
                   )}
                 >
-                  Choose {plan}
-                </Button>
-              </div>
-            ))}
+                  {isFeaturedPlan && (
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-valasys-orange text-white text-[10px] font-black rounded-full uppercase">
+                      Most Popular
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-bold mb-1" contentEditable suppressContentEditableWarning>{plan}</h3>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black">${[19, 49, 99][i]}</span>
+                      <span className="text-gray-400 text-sm">/mo</span>
+                    </div>
+                  </div>
+                  <ul className="space-y-3 flex-1">
+                    {[1, 2, 3, 4].map((j) => (
+                      <li key={j} className="flex items-center gap-3 text-sm text-gray-600">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span contentEditable suppressContentEditableWarning>{`Benefit number ${j}`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className={cn(
+                      "w-full py-6 font-bold rounded-xl",
+                      isFeaturedPlan ? "bg-valasys-orange hover:bg-valasys-orange/90" : "bg-gray-900",
+                    )}
+                  >
+                    Choose {plan}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>,
       );
