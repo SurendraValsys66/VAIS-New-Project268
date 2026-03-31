@@ -446,10 +446,16 @@ export const PricingBlockPreview: React.FC<BlockPreviewProps> = ({
         <div
           className={cn(
             "cursor-pointer transition-all rounded p-3 mb-2 relative",
-            selectedElement === "heading" && "border-2 border-solid border-valasys-orange bg-orange-50",
-            hoveredElement === "heading" && selectedElement !== "heading" && "border-2 border-dashed border-valasys-orange bg-gray-50",
-            selectedElement !== "heading" && hoveredElement !== "heading" && "border-2 border-gray-200"
+            selectedElement === "heading" && "bg-orange-50",
+            hoveredElement === "heading" && selectedElement !== "heading" && "bg-gray-50",
           )}
+          style={{
+            border: selectedElement === "heading"
+              ? "2px solid #FF6A00"
+              : hoveredElement === "heading"
+              ? "2px dashed #FF6A00"
+              : "2px solid #e5e7eb",
+          }}
           onMouseEnter={(e) => {
             e.stopPropagation();
             setHoveredElement("heading");
@@ -486,10 +492,16 @@ export const PricingBlockPreview: React.FC<BlockPreviewProps> = ({
         <div
           className={cn(
             "cursor-pointer transition-all rounded p-3 mb-8 relative",
-            selectedElement === "subheading" && "border-2 border-solid border-valasys-orange bg-orange-50",
-            hoveredElement === "subheading" && selectedElement !== "subheading" && "border-2 border-dashed border-valasys-orange bg-gray-50",
-            selectedElement !== "subheading" && hoveredElement !== "subheading" && "border-2 border-gray-200"
+            selectedElement === "subheading" && "bg-orange-50",
+            hoveredElement === "subheading" && selectedElement !== "subheading" && "bg-gray-50",
           )}
+          style={{
+            border: selectedElement === "subheading"
+              ? "2px solid #FF6A00"
+              : hoveredElement === "subheading"
+              ? "2px dashed #FF6A00"
+              : "2px solid #e5e7eb",
+          }}
           onMouseEnter={(e) => {
             e.stopPropagation();
             setHoveredElement("subheading");
@@ -529,10 +541,14 @@ export const PricingBlockPreview: React.FC<BlockPreviewProps> = ({
               className={cn(
                 "rounded-lg p-8 text-center transition-all relative cursor-pointer",
                 tier.isHighlighted ? "bg-gray-900 text-white shadow-lg scale-105" : "bg-white",
-                selectedTierId === tier.id && "border-2 border-solid border-valasys-orange",
-                hoveredTierId === tier.id && selectedTierId !== tier.id && "border-2 border-dashed border-valasys-orange",
-                selectedTierId !== tier.id && hoveredTierId !== tier.id && "border border-gray-200"
               )}
+              style={{
+                border: selectedTierId === tier.id
+                  ? "2px solid #FF6A00"
+                  : hoveredTierId === tier.id
+                  ? "2px dashed #FF6A00"
+                  : "1px solid #e5e7eb",
+              }}
               onMouseEnter={(e) => {
                 e.stopPropagation();
                 setHoveredTierId(tier.id);
