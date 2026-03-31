@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { LandingPageBlock } from "./types";
-import { Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { Trash2, ChevronUp, ChevronDown, GripVertical, Copy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HeaderBlockPreview,
@@ -30,6 +30,7 @@ interface DraggableBlockProps {
   onSelect: () => void;
   onUpdate: (props: Record<string, any>) => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   canMoveUp: boolean;
@@ -43,6 +44,7 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   onSelect,
   onUpdate,
   onDelete,
+  onDuplicate,
   onMoveUp,
   onMoveDown,
   canMoveUp,
@@ -50,6 +52,18 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyBlock = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(block, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy block:", error);
+    }
+  };
   const [{ isDragging }] = useDrag(
     () => ({
       type: "DRAGGABLE_BLOCK",
@@ -146,6 +160,27 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
       {/* Controls */}
       {isSelected && (
         <div className="absolute top-2 right-2 flex gap-2 bg-white rounded-lg shadow-lg p-1 z-20">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+            title={copied ? "Copied!" : "Copy block"}
+            onClick={handleCopyBlock}
+          >
+            <Copy className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+            title="Duplicate block"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate();
+            }}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
           <Button
             size="sm"
             variant="ghost"

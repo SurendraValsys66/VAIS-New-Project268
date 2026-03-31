@@ -13,6 +13,7 @@ interface DragDropCanvasProps {
   onAddBlock: (block: LandingPageBlock, parentId?: string) => void;
   onUpdateBlock: (blockId: string, properties: Record<string, any>) => void;
   onDeleteBlock: (blockId: string) => void;
+  onDuplicateBlock?: (block: LandingPageBlock, position: number) => void;
   onMoveBlock: (blockId: string, direction: "up" | "down") => void;
 }
 
@@ -23,6 +24,7 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({
   onAddBlock,
   onUpdateBlock,
   onDeleteBlock,
+  onDuplicateBlock,
   onMoveBlock,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -97,6 +99,9 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({
         onSelect={() => onSelectBlock(block.id)}
         onUpdate={(props) => onUpdateBlock(block.id, props)}
         onDelete={() => onDeleteBlock(block.id)}
+        onDuplicate={() => {
+          onDuplicateBlock?.(block, index + 1);
+        }}
         onMoveUp={() => onMoveBlock(block.id, "up")}
         onMoveDown={() => onMoveBlock(block.id, "down")}
         canMoveUp={index > 0}

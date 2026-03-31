@@ -1,5 +1,5 @@
-import React from "react";
-import { Trash2, ChevronUp, ChevronDown, Copy } from "lucide-react";
+import React, { useState } from "react";
+import { Trash2, ChevronUp, ChevronDown, Copy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LandingPage, LandingPageBlock } from "./types";
 import {
@@ -24,7 +24,7 @@ interface LandingPagePreviewProps {
   onUpdateBlock: (blockId: string, properties: Record<string, any>) => void;
   onDeleteBlock: (blockId: string) => void;
   onMoveBlock: (blockId: string, direction: "up" | "down") => void;
-  onDuplicateBlock?: (blockId: string) => void;
+  onDuplicateBlock?: (block: LandingPageBlock, position: number) => void;
 }
 
 export const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({
@@ -36,6 +36,18 @@ export const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({
   onMoveBlock,
   onDuplicateBlock,
 }) => {
+  const [copiedBlockId, setCopiedBlockId] = useState<string | null>(null);
+
+  const handleCopyBlock = async (e: React.MouseEvent, block: LandingPageBlock) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(block, null, 2));
+      setCopiedBlockId(block.id);
+      setTimeout(() => setCopiedBlockId(null), 2000);
+    } catch (error) {
+      console.error("Failed to copy block:", error);
+    }
+  };
   const renderBlock = (block: LandingPageBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
     const canMoveUp = index > 0;
@@ -109,13 +121,22 @@ export const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 hover:bg-gray-100"
-              title="Copy block"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicateBlock?.(block.id);
-              }}
+              title={copiedBlockId === block.id ? "Copied!" : "Copy block"}
+              onClick={(e) => handleCopyBlock(e, block)}
             >
               <Copy className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+              title="Duplicate block"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicateBlock?.(block, index + 1);
+              }}
+            >
+              <Plus className="w-4 h-4" />
             </Button>
             <Button
               size="sm"

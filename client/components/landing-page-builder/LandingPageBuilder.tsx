@@ -93,6 +93,25 @@ export const LandingPageBuilder: React.FC<LandingPageBuilderProps> = ({
     setSelectedBlockId(null);
   };
 
+  const handleDuplicateBlock = (block: LandingPageBlock, position: number) => {
+    if (!page) return;
+
+    const newBlock: LandingPageBlock = {
+      ...block,
+      id: `${block.type}-${Date.now()}`,
+    };
+
+    const newBlocks = [...page.blocks];
+    newBlocks.splice(position, 0, newBlock);
+
+    setPage({
+      ...page,
+      blocks: newBlocks,
+    });
+
+    setSelectedBlockId(newBlock.id);
+  };
+
   const handleMoveBlock = (blockId: string, direction: "up" | "down") => {
     if (!page) return;
 
@@ -224,6 +243,7 @@ export const LandingPageBuilder: React.FC<LandingPageBuilderProps> = ({
               onSelectBlock={setSelectedBlockId}
               onUpdateBlock={handleUpdateBlock}
               onDeleteBlock={handleDeleteBlock}
+              onDuplicateBlock={handleDuplicateBlock}
               onMoveBlock={handleMoveBlock}
             />
           </div>

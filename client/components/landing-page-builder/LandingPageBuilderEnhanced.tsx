@@ -145,24 +145,17 @@ export const LandingPageBuilderEnhanced: React.FC<LandingPageBuilderEnhancedProp
     });
   };
 
-  const handleDuplicateBlock = (blockId: string) => {
+  const handleDuplicateBlock = (block: LandingPageBlock, position: number) => {
     if (!page) return;
-    const blockIndex = page.blocks.findIndex((b) => b.id === blockId);
-    if (blockIndex === -1) return;
-
-    const blockToDuplicate = page.blocks[blockIndex];
 
     // Deep copy the block including all properties and children
     const duplicatedBlock: LandingPageBlock = JSON.parse(JSON.stringify({
-      ...blockToDuplicate,
-      id: `${blockToDuplicate.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      ...block,
+      id: `${block.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     }));
 
-    const newBlocks = [
-      ...page.blocks.slice(0, blockIndex + 1),
-      duplicatedBlock,
-      ...page.blocks.slice(blockIndex + 1),
-    ];
+    const newBlocks = [...page.blocks];
+    newBlocks.splice(position, 0, duplicatedBlock);
 
     setPage({
       ...page,
@@ -385,13 +378,14 @@ export const LandingPageBuilderEnhanced: React.FC<LandingPageBuilderEnhancedProp
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <LandingPagePreview
-                page={page}
-                selectedBlockId={null}
-                onSelectBlock={() => {}}
-                onUpdateBlock={() => {}}
-                onDeleteBlock={() => {}}
-                onMoveBlock={() => {}}
-              />
+              page={page}
+              selectedBlockId={null}
+              onSelectBlock={() => {}}
+              onUpdateBlock={() => {}}
+              onDeleteBlock={() => {}}
+              onMoveBlock={() => {}}
+              onDuplicateBlock={() => {}}
+            />
             </div>
           </div>
         </DialogContent>
